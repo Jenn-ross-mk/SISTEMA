@@ -17,6 +17,8 @@ function groupByModelo(vehiculos) {
   return sorted
 }
 
+
+
 export default function VehiculosIndex() {
   const [vehiculos, setVehiculos] = useState([])
   const [loading, setLoading] = useState(true)
