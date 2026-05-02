@@ -6,6 +6,7 @@ export default function AdminVehiculos() {
   const [vehiculos, setVehiculos] = useState([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
+  const [duplicandoId, setDuplicandoId] = useState(null)
   const [search, setSearch] = useState('')
   const [toast, setToast] = useState(null)
 
@@ -41,6 +42,42 @@ export default function AdminVehiculos() {
     setDeletingId(null)
   }
 
+  async function handleDuplicar(v) {
+    if (!confirm(`¿Duplicar ${v.marca} ${v.modelo} ${v.version}? Se copiará el vehículo con todos sus planes.`)) return
+    setDuplicandoId(v.id)
+    try {
+      // 1. Copiar el vehículo
+      const { id, created_at, updated_at, ...vehiculoData } = v
+      const { data: nuevo, error: errV } = await supabase
+        .from('vehiculos')
+        .insert({ ...vehiculoData, version: v.version + ' (copia)', activo: false })
+        .select()
+        .single()
+      if (errV) throw errV
+
+      // 2. Copiar todos los planes
+      const { data: planes } = await supabase
+        .from('planes_financiacion')
+        .select('*')
+        .eq('vehiculo_id', v.id)
+
+      if (planes && planes.length > 0) {
+        const nuevosPlanes = planes.map(({ id, created_at, vehiculo_id, ...planData }) => ({
+          ...planData,
+          vehiculo_id: nuevo.id,
+        }))
+        await supabase.from('planes_financiacion').insert(nuevosPlanes)
+      }
+
+      showToast(`Vehículo duplicado como "${v.version} (copia)"`)
+      load()
+    } catch (err) {
+      console.error(err)
+      showToast('No se pudo duplicar', 'error')
+    }
+    setDuplicandoId(null)
+  }
+
   const filtered = vehiculos.filter(v =>
     `${v.marca} ${v.modelo} ${v.version}`.toLowerCase().includes(search.toLowerCase())
   )
@@ -69,8 +106,7 @@ export default function AdminVehiculos() {
         {filtered.length === 0 ? (
           <div className="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
             </svg>
             <p>No hay vehículos. <Link to="/admin/vehiculos/nuevo" style={{ color: '#003366' }}>Agregar el primero</Link></p>
           </div>
@@ -126,6 +162,20 @@ export default function AdminVehiculos() {
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                           </svg>
                         </Link>
+                        <button
+                          onClick={() => handleDuplicar(v)}
+                          className="btn btn-ghost btn-sm btn-icon"
+                          disabled={duplicandoId === v.id}
+                          title="Duplicar"
+                        >
+                          {duplicandoId === v.id ? (
+                            <div className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                          ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                          )}
+                        </button>
                         <button onClick={() => toggleActivo(v)} className="btn btn-ghost btn-sm btn-icon" title={v.activo ? 'Desactivar' : 'Activar'}>
                           {v.activo ? (
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>

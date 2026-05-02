@@ -22,7 +22,7 @@ export default function CotizadorVehiculo() {
   const printRef = useRef()
 
   const [vehiculo, setVehiculo] = useState(null)
-  const [planes, setPlanes] = useState([])   // rows de planes_financiacion
+  const [planes, setPlanes] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -35,8 +35,6 @@ export default function CotizadorVehiculo() {
   const [banco, setBanco] = useState('chubut')
   const [observaciones, setObservaciones] = useState('')
 
-  // Por cada plan (agrupado por nombre) guardamos: monto digitado y cuota seleccionada (id de fila)
-  // planState: { [nombrePlan]: { monto: string, cuotaId: string } }
   const [planState, setPlanState] = useState({})
 
   useEffect(() => {
@@ -58,7 +56,6 @@ export default function CotizadorVehiculo() {
       const rows = p || []
       setPlanes(rows)
 
-      // Inicializar planState con la primer cuota de cada plan
       const nombresUnicos = [...new Set(rows.map(r => r.nombre_plan))]
       const inicial = {}
       nombresUnicos.forEach(nombre => {
@@ -71,7 +68,6 @@ export default function CotizadorVehiculo() {
     load()
   }, [id])
 
-  // Agrupar planes por nombre
   const planesByNombre = {}
   planes.forEach(p => {
     if (!planesByNombre[p.nombre_plan]) planesByNombre[p.nombre_plan] = []
@@ -79,7 +75,6 @@ export default function CotizadorVehiculo() {
   })
   const nombresPlanes = Object.keys(planesByNombre)
 
-  // Precio base según provincia
   const precioBase = provincia === 'chubut'
     ? (vehiculo?.precio_chubut || 0)
     : provincia === 'santacruz'
@@ -89,27 +84,22 @@ export default function CotizadorVehiculo() {
   const entregaNum = parseMonto(entregaUsado)
   const descuentoNum = parseMonto(descuento)
 
-  // Detectar el plan activo (el único que tiene monto > 0)
   const planActivoNombre = nombresPlanes.find(nombre => parseMonto(planState[nombre]?.monto) > 0) || null
   const planActivoState = planActivoNombre ? planState[planActivoNombre] : null
   const montoActivo = planActivoState ? parseMonto(planActivoState.monto) : 0
 
-  // Fila de cuota activa
   const cuotaActivaRow = planActivoState
     ? planes.find(p => p.id === planActivoState.cuotaId)
     : null
 
-  // Calcular cuota mensual usando siempre cuota por millón
   let valorCuota = 0
   if (cuotaActivaRow && montoActivo > 0) {
     valorCuota = (montoActivo / UNIDAD_BASE) * cuotaActivaRow.valor_cuota_por_millon
   }
 
-  // Quebranto: monto × quebranto_pct × (1 + IVA)
   const quebrantoPct = cuotaActivaRow?.quebranto_pct || 0
   const quebranto = montoActivo * quebrantoPct * (1 + IVA_QUEBRANTO)
 
-  // Sellado: total de cuotas × porcentaje banco
   const cuotasActivas = cuotaActivaRow?.cuotas || 0
   const totalCuotas = valorCuota * cuotasActivas
   const sellado = totalCuotas * (BANCOS[banco] || 0)
@@ -135,27 +125,34 @@ export default function CotizadorVehiculo() {
     if (!cliente || !provincia || !profile) return
     if (saving) return
     setSaving(true)
-    await supabase.from('cotizaciones').insert({
-      vendedor_id: profile.id,
-      vendedor_nombre: vendedor || profile.nombre,
-      cliente_nombre: cliente,
-      vehiculo_id: id,
-      vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
-      provincia,
-      precio_base: precioBase,
-      entrega_usado: entregaNum,
-      descuento: descuentoNum,
-      plan_nombre: cuotaActivaRow
-        ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas`
-        : null,
-      monto_financiado: montoActivo,
-      cuotas: cuotasActivas,
-      valor_cuota: valorCuota,
-      quebranto,
-      sellado,
-      saldo_efectivo: saldoEfectivo,
-    })
-    setSaving(false)
+    try {
+      const { error } = await supabase.from('cotizaciones').insert({
+        vendedor_id: profile.id,
+        vendedor_nombre: vendedor || profile.nombre,
+        cliente_nombre: cliente,
+        vehiculo_id: id,
+        vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
+        provincia,
+        precio_base: precioBase,
+        entrega_usado: entregaNum,
+        descuento: descuentoNum,
+        plan_nombre: cuotaActivaRow
+          ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas`
+          : null,
+        monto_financiado: montoActivo,
+        cuotas: cuotasActivas,
+        valor_cuota: valorCuota,
+        quebranto,
+        sellado,
+        saldo_efectivo: saldoEfectivo,
+      })
+      if (error) throw error
+    } catch (err) {
+      console.error('Error al guardar cotización:', err)
+      alert('No se pudo guardar la cotización. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handlePDF() {
@@ -265,14 +262,12 @@ export default function CotizadorVehiculo() {
             const montoNum = parseMonto(state.monto)
             const cuotaRow = planes.find(p => p.id === state.cuotaId)
 
-            // Cuota calculada para mostrar preview
             let cuotaPreview = 0
             if (cuotaRow && montoNum > 0) {
               cuotaPreview = (montoNum / UNIDAD_BASE) * cuotaRow.valor_cuota_por_millon
             }
 
             const isActive = montoNum > 0
-            // Deshabilitar si hay otro plan activo
             const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
 
             return (
@@ -297,7 +292,6 @@ export default function CotizadorVehiculo() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                  {/* Monto */}
                   <div className="form-group" style={{ minWidth: '200px' }}>
                     <label className="form-label">
                       Monto a financiar
@@ -316,7 +310,6 @@ export default function CotizadorVehiculo() {
                     />
                   </div>
 
-                  {/* Selector de cuotas */}
                   <div className="form-group" style={{ minWidth: '180px' }}>
                     <label className="form-label">Cuotas</label>
                     <select
@@ -336,7 +329,6 @@ export default function CotizadorVehiculo() {
                     </select>
                   </div>
 
-                  {/* Cuota mensual */}
                   {cuotaPreview > 0 && (
                     <div style={{ paddingBottom: '2px' }}>
                       <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cuota mensual</div>
