@@ -2,18 +2,17 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-const MARCAS_ORDEN = ['ONIX', 'TRACKER', 'CAPTIVA', 'SPIN', 'MONTANA', 'S10', 'SPARK', 'SILVERADO', 'TRAILBLAZER']
+const MODELOS_ORDEN = ['ONIX','ONIX PLUS','TRACKER','SPIN','SPARK EUV','CAPTIVA','MONTANA','S10','SILVERADO','TRAILBLAZER','SONIC']
 
-function groupByMarca(vehiculos) {
+function groupByModelo(vehiculos) {
   const groups = {}
   vehiculos.forEach(v => {
-    const key = v.marca.toUpperCase()
+    const key = v.modelo.toUpperCase()
     if (!groups[key]) groups[key] = []
     groups[key].push(v)
   })
-  // Sort by MARCAS_ORDEN
   const sorted = {}
-  MARCAS_ORDEN.forEach(m => { if (groups[m]) sorted[m] = groups[m] })
+  MODELOS_ORDEN.forEach(m => { if (groups[m]) sorted[m] = groups[m] })
   Object.keys(groups).forEach(m => { if (!sorted[m]) sorted[m] = groups[m] })
   return sorted
 }
@@ -31,7 +30,6 @@ export default function VehiculosIndex() {
         .select('*')
         .eq('activo', true)
         .order('orden', { ascending: true })
-        .order('marca')
         .order('modelo')
         .order('version')
       setVehiculos(data || [])
@@ -41,10 +39,10 @@ export default function VehiculosIndex() {
   }, [])
 
   const filtered = vehiculos.filter(v =>
-    `${v.marca} ${v.modelo} ${v.version}`.toLowerCase().includes(search.toLowerCase())
+    `${v.modelo} ${v.version}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  const groups = groupByMarca(filtered)
+  const groups = groupByModelo(filtered)
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
 
@@ -92,7 +90,6 @@ export default function VehiculosIndex() {
                 fontSize: '15px',
                 fontFamily: "'Barlow', sans-serif",
                 outline: 'none',
-                transition: 'border-color 0.15s',
               }}
               onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.5)'}
               onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'}
@@ -101,7 +98,7 @@ export default function VehiculosIndex() {
         </div>
       </div>
 
-      {/* Vehicles by group */}
+      {/* Vehículos agrupados por modelo */}
       {Object.keys(groups).length === 0 ? (
         <div className="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -111,16 +108,20 @@ export default function VehiculosIndex() {
           <p>No se encontraron vehículos</p>
         </div>
       ) : (
-        Object.entries(groups).map(([marca, vehics]) => (
-          <div key={marca} style={{ marginBottom: '32px' }}>
+        Object.entries(groups).map(([modelo, vehics]) => (
+          <div key={modelo} style={{ marginBottom: '32px' }}>
+            {/* Título del grupo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
               <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '22px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                {marca}
+                {modelo}
               </h2>
               <div style={{ flex: 1, height: '1px', background: '#e2e6ec' }} />
-              <span className="badge badge-navy">{vehics.length} {vehics.length === 1 ? 'versión' : 'versiones'}</span>
+              <span className="badge badge-navy">
+                {vehics.length} {vehics.length === 1 ? 'versión' : 'versiones'}
+              </span>
             </div>
 
+            {/* Cards de versiones */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
               {vehics.map(v => (
                 <button
@@ -148,7 +149,7 @@ export default function VehiculosIndex() {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,51,102,0.06)'
                   }}
                 >
-                  {/* Image */}
+                  {/* Imagen */}
                   <div style={{ height: '140px', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {v.imagen_url ? (
                       <img src={v.imagen_url} alt={`${v.modelo} ${v.version}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -162,17 +163,17 @@ export default function VehiculosIndex() {
 
                   {/* Info */}
                   <div style={{ padding: '14px 16px 16px' }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '17px', fontWeight: '700', color: '#003366', lineHeight: 1.1, marginBottom: '4px' }}>
-                      {v.modelo}
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '600', color: '#8896a7', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Chevrolet {v.modelo}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#8896a7', fontWeight: '500', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '14px', color: '#1a202c', fontWeight: '600', marginBottom: '10px' }}>
                       {v.version}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>desde</div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a202c' }}>
-                          ${Math.min(v.precio_chubut, v.precio_santacruz).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#003366' }}>
+                          ${Math.min(v.precio_chubut || 0, v.precio_santacruz || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
                       </div>
                       <div style={{ background: '#003366', color: 'white', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
