@@ -25,8 +25,8 @@ export default function CotizadorVehiculo() {
   const [planes, setPlanes] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [imprimiendo, setImprimiendo] = useState(false)
 
-  // Form
   const [vendedor, setVendedor] = useState('')
   const [cliente, setCliente] = useState('')
   const [provincia, setProvincia] = useState('')
@@ -34,7 +34,6 @@ export default function CotizadorVehiculo() {
   const [descuento, setDescuento] = useState('')
   const [banco, setBanco] = useState('chubut')
   const [observaciones, setObservaciones] = useState('')
-
   const [planState, setPlanState] = useState({})
 
   useEffect(() => {
@@ -157,15 +156,30 @@ export default function CotizadorVehiculo() {
 
   async function handlePDF() {
     await handleSave()
+    // Activamos modo impresión para ocultar planes inactivos
+    setImprimiendo(true)
+    await new Promise(r => setTimeout(r, 100))
+
     const { default: html2canvas } = await import('html2canvas')
     const { jsPDF } = await import('jspdf')
     const el = printRef.current
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' })
     const pdf = new jsPDF('p', 'mm', 'a4')
-    const w = pdf.internal.pageSize.getWidth() - 20
-    const h = (canvas.height * w) / canvas.width
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, w, h)
+    const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
+    const margin = 10
+    const imgW = pageW - margin * 2
+    const imgH = (canvas.height * imgW) / canvas.width
+    const totalPages = Math.ceil(imgH / (pageH - margin * 2))
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) pdf.addPage()
+      const offsetY = -(i * (pageH - margin * 2)) + margin
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, offsetY, imgW, imgH)
+    }
     pdf.save(`${cliente || 'cotizacion'}.pdf`)
+
+    // Restauramos vista normal
+    setImprimiendo(false)
   }
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
@@ -270,6 +284,9 @@ export default function CotizadorVehiculo() {
             const isActive = montoNum > 0
             const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
 
+            // Si estamos imprimiendo, ocultamos los planes que no están activos
+            if (imprimiendo && isDisabled) return null
+
             return (
               <div
                 key={nombrePlan}
@@ -372,8 +389,8 @@ export default function CotizadorVehiculo() {
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Resumen</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[
-                  ['Valor del vehículo', precioBase, false],
-                  ['Gastos bancarios', gastosBancarios, false],
+                  ['Valor del vehículo', precioBase],
+                  ['Gastos bancarios', gastosBancarios],
                 ].map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                     <span style={{ color: '#4a5568' }}>{label}</span>
