@@ -544,27 +544,27 @@ tbody tr:last-child td {
    RESPONSIVE MOBILE
    ======================== */
 
-/* Por defecto (desktop): burger oculto, nav visible */
+/* Desktop por defecto: burger oculto, nav visible */
 .header-burger {
-  display: none;
+  display: none !important;
 }
 
 .header-nav {
-  display: flex;
+  display: flex !important;
 }
 
 @media (max-width: 768px) {
 
-  /* Burger visible, nav oculto */
+  /* Mobile: burger visible, nav oculto */
   .header-burger {
-    display: flex;
+    display: flex !important;
   }
 
   .header-nav {
-    display: none;
+    display: none !important;
   }
 
-  /* Modal desde abajo */
+  /* Modal desde abajo en mobile */
   .modal-overlay {
     padding: 0;
     align-items: flex-end;
@@ -576,22 +576,17 @@ tbody tr:last-child td {
     max-width: 100%;
   }
 
-  /* Toast full width */
+  /* Toast full width en mobile */
   .toast {
     bottom: 12px;
     right: 12px;
     left: 12px;
   }
 
-  /* Vehículos: 2 por fila */
+  /* Vehículos: exactamente 2 por fila en mobile */
   .vehiculos-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
-  }
-
-  /* Padding de páginas admin */
-  .admin-page-pad {
-    padding: 16px !important;
   }
 }
 
