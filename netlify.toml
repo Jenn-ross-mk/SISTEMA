@@ -1,1 +1,3 @@
-
+[build]
+  command = "npm exec -- vite build"
+  publish = "dist"
