@@ -7,6 +7,14 @@ const BANCOS = { chubut: 0.012, santacruz: 0.014 }
 const IVA_QUEBRANTO = 0.21
 const UNIDAD_BASE = 1_000_000
 
+const ORDEN_PLANES = [
+  'Plan convencional',
+  'Tasa 0%',
+  'Plan diferido',
+  'Plan especial - Tasa Fija',
+  'Plan especial - UVA',
+]
+
 function fmt(n) {
   return (n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
@@ -70,7 +78,11 @@ export default function CotizadorVehiculo() {
     if (!planesByNombre[p.nombre_plan]) planesByNombre[p.nombre_plan] = []
     planesByNombre[p.nombre_plan].push(p)
   })
-  const nombresPlanes = Object.keys(planesByNombre)
+
+  const nombresPlanes = [
+    ...ORDEN_PLANES.filter(p => planesByNombre[p]),
+    ...Object.keys(planesByNombre).filter(p => !ORDEN_PLANES.includes(p)),
+  ]
 
   const precioBase = provincia === 'chubut'
     ? (vehiculo?.precio_chubut || 0)
@@ -175,11 +187,11 @@ export default function CotizadorVehiculo() {
 
       <div ref={printRef}>
         {/* Header con logo */}
-        <div style={{ background: '#003366', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
+        <div style={{ background: '#003366', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
           <img
             src="/logo-akar.png"
             alt="Akar Automotores"
-            style={{ height: '48px' }}
+            style={{ height: '64px' }}
           />
           <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
             {new Date().toLocaleDateString('es-AR')}
