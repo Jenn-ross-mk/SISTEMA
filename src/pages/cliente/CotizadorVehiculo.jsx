@@ -25,7 +25,6 @@ export default function CotizadorVehiculo() {
   const [planes, setPlanes] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [imprimiendo, setImprimiendo] = useState(false)
 
   const [vendedor, setVendedor] = useState('')
   const [cliente, setCliente] = useState('')
@@ -54,7 +53,6 @@ export default function CotizadorVehiculo() {
       setVehiculo(v)
       const rows = p || []
       setPlanes(rows)
-
       const nombresUnicos = [...new Set(rows.map(r => r.nombre_plan))]
       const inicial = {}
       nombresUnicos.forEach(nombre => {
@@ -98,11 +96,9 @@ export default function CotizadorVehiculo() {
 
   const quebrantoPct = cuotaActivaRow?.quebranto_pct || 0
   const quebranto = montoActivo * quebrantoPct * (1 + IVA_QUEBRANTO)
-
   const cuotasActivas = cuotaActivaRow?.cuotas || 0
   const totalCuotas = valorCuota * cuotasActivas
   const sellado = totalCuotas * (BANCOS[banco] || 0)
-
   const gastosBancarios = quebranto + sellado
   const saldoEfectivo = precioBase + gastosBancarios - entregaNum - montoActivo - descuentoNum
 
@@ -156,30 +152,15 @@ export default function CotizadorVehiculo() {
 
   async function handlePDF() {
     await handleSave()
-    // Activamos modo impresión para ocultar planes inactivos
-    setImprimiendo(true)
-    await new Promise(r => setTimeout(r, 100))
-
     const { default: html2canvas } = await import('html2canvas')
     const { jsPDF } = await import('jspdf')
     const el = printRef.current
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' })
     const pdf = new jsPDF('p', 'mm', 'a4')
-    const pageW = pdf.internal.pageSize.getWidth()
-    const pageH = pdf.internal.pageSize.getHeight()
-    const margin = 10
-    const imgW = pageW - margin * 2
-    const imgH = (canvas.height * imgW) / canvas.width
-    const totalPages = Math.ceil(imgH / (pageH - margin * 2))
-    for (let i = 0; i < totalPages; i++) {
-      if (i > 0) pdf.addPage()
-      const offsetY = -(i * (pageH - margin * 2)) + margin
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, offsetY, imgW, imgH)
-    }
+    const w = pdf.internal.pageSize.getWidth() - 20
+    const h = (canvas.height * w) / canvas.width
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, w, h)
     pdf.save(`${cliente || 'cotizacion'}.pdf`)
-
-    // Restauramos vista normal
-    setImprimiendo(false)
   }
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
@@ -193,15 +174,13 @@ export default function CotizadorVehiculo() {
       </button>
 
       <div ref={printRef}>
-        {/* Header */}
+        {/* Header con logo */}
         <div style={{ background: '#003366', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-            </svg>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: '700', fontSize: '22px', color: 'white', letterSpacing: '0.06em' }}>AKAR</span>
-          </div>
+          <img
+            src="/logo-akar.png"
+            alt="Akar Automotores"
+            style={{ height: '48px' }}
+          />
           <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
             {new Date().toLocaleDateString('es-AR')}
           </div>
@@ -283,9 +262,6 @@ export default function CotizadorVehiculo() {
 
             const isActive = montoNum > 0
             const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
-
-            // Si estamos imprimiendo, ocultamos los planes que no están activos
-            if (imprimiendo && isDisabled) return null
 
             return (
               <div

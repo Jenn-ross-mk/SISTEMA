@@ -26,7 +26,6 @@ export default function LoginPage() {
       justifyContent: 'center',
       padding: '20px',
     }}>
-      {/* Background pattern */}
       <div style={{
         position: 'fixed', inset: 0, opacity: 0.04,
         backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, white 40px, white 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, white 40px, white 41px)',
@@ -34,23 +33,13 @@ export default function LoginPage() {
       }} />
 
       <div style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
-        {/* Logo/Brand */}
+        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: '72px', height: '72px', borderRadius: '18px',
-            background: 'rgba(255,255,255,0.12)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            marginBottom: '16px',
-          }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-            </svg>
-          </div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '32px', fontWeight: '700', color: 'white', letterSpacing: '0.06em', lineHeight: 1 }}>
-            AKAR
-          </h1>
+          <img
+            src="/logo-akar.png"
+            alt="Akar Automotores"
+            style={{ width: '280px', marginBottom: '16px' }}
+          />
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', marginTop: '4px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Cotizador Automotores
           </p>
