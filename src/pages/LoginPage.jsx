@@ -41,7 +41,7 @@ export default function LoginPage() {
             style={{ width: '280px', marginBottom: '16px' }}
           />
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', marginTop: '4px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Cotizador Automotores
+            Cotizador - Akar Automotores
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
         </div>
 
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '12px', marginTop: '24px' }}>
-          © 2025 Akar Automotores
+          © 2026 Akar Automotores
         </p>
       </div>
     </div>

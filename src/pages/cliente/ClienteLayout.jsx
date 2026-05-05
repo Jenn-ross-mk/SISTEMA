@@ -78,7 +78,7 @@ export default function ClienteLayout() {
 
       {/* Footer */}
       <footer style={{ background: '#003366', padding: '14px 24px', textAlign: 'center' }}>
-        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2025 Akar Automotores. Todos los derechos reservados.</span>
+        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2026 Akar Automotores. Todos los derechos reservados.</span>
       </footer>
     </div>
   )
