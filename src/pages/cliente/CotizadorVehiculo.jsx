@@ -42,6 +42,7 @@ export default function CotizadorVehiculo() {
   const [banco, setBanco] = useState('chubut')
   const [observaciones, setObservaciones] = useState('')
   const [planState, setPlanState] = useState({})
+  const [isPrinting, setIsPrinting] = useState(false)
 
   useEffect(() => {
     if (profile?.nombre) setVendedor(profile.nombre)
@@ -166,8 +167,11 @@ export default function CotizadorVehiculo() {
     await handleSave()
     const { default: html2canvas } = await import('html2canvas')
     const { jsPDF } = await import('jspdf')
+    setIsPrinting(true)
+    await new Promise(r => setTimeout(r, 80))
     const el = printRef.current
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' })
+    setIsPrinting(false)
     const pdf = new jsPDF('p', 'mm', 'a4')
     const w = pdf.internal.pageSize.getWidth() - 20
     const h = (canvas.height * w) / canvas.width
@@ -245,20 +249,30 @@ export default function CotizadorVehiculo() {
             </div>
           </div>
 
-          {/* Entrega / Descuento */}
+          {/* Entrega / Descuento — se oculta al imprimir si ambos son 0 */}
+          {(!isPrinting || entregaNum > 0 || descuentoNum > 0) && (
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Cliente</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {(!isPrinting || entregaNum > 0) && (
               <div className="form-group">
                 <label className="form-label">Entrega de usado</label>
-                <input className="form-input" value={entregaUsado} onChange={e => setEntregaUsado(e.target.value)} placeholder="$ 0.00" />
+                {isPrinting
+                  ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(entregaNum)}</div>
+                  : <input className="form-input" value={entregaUsado} onChange={e => setEntregaUsado(e.target.value)} placeholder="$ 0.00" />}
               </div>
+              )}
+              {(!isPrinting || descuentoNum > 0) && (
               <div className="form-group">
                 <label className="form-label">Descuento (si aplica)</label>
-                <input className="form-input" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="$ 0.00" />
+                {isPrinting
+                  ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(descuentoNum)}</div>
+                  : <input className="form-input" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="$ 0.00" />}
               </div>
+              )}
             </div>
           </div>
+          )}
 
           {/* Planes de financiación */}
           {nombresPlanes.map(nombrePlan => {
@@ -274,6 +288,9 @@ export default function CotizadorVehiculo() {
 
             const isActive = montoNum > 0
             const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
+
+            // Al imprimir, omitir los planes sin monto
+            if (isPrinting && !isActive) return null
 
             return (
               <div
@@ -300,38 +317,44 @@ export default function CotizadorVehiculo() {
                   <div className="form-group" style={{ minWidth: '200px' }}>
                     <label className="form-label">
                       Monto a financiar
-                      {cuotaRow?.monto_maximo ? (
+                      {!isPrinting && cuotaRow?.monto_maximo ? (
                         <span style={{ fontWeight: '400', textTransform: 'none', letterSpacing: 0, color: '#8896a7', marginLeft: '6px', fontSize: '11px' }}>
                           máx. ${fmt(cuotaRow.monto_maximo)}
                         </span>
                       ) : null}
                     </label>
-                    <input
-                      className="form-input"
-                      disabled={isDisabled}
-                      value={state.monto}
-                      onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
-                      placeholder="$ 0.00"
-                    />
+                    {isPrinting
+                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
+                      : <input
+                          className="form-input"
+                          disabled={isDisabled}
+                          value={state.monto}
+                          onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
+                          placeholder="$ 0.00"
+                        />
+                    }
                   </div>
 
                   <div className="form-group" style={{ minWidth: '180px' }}>
                     <label className="form-label">Cuotas</label>
-                    <select
-                      className="form-select"
-                      disabled={isDisabled}
-                      value={state.cuotaId}
-                      onChange={e => handleCuotaChange(nombrePlan, e.target.value)}
-                    >
-                      {cuotasDelPlan.map(p => {
-                        const excedeMonto = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
-                        return (
-                          <option key={p.id} value={p.id} disabled={excedeMonto}>
-                            {p.cuotas} — Máx. ${p.monto_maximo ? (p.monto_maximo / 1_000_000).toFixed(1) : '0.0'}M
-                          </option>
-                        )
-                      })}
-                    </select>
+                    {isPrinting
+                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>{cuotaRow?.cuotas} cuotas</div>
+                      : <select
+                          className="form-select"
+                          disabled={isDisabled}
+                          value={state.cuotaId}
+                          onChange={e => handleCuotaChange(nombrePlan, e.target.value)}
+                        >
+                          {cuotasDelPlan.map(p => {
+                            const excedeMonto = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
+                            return (
+                              <option key={p.id} value={p.id} disabled={excedeMonto}>
+                                {p.cuotas} — Máx. ${p.monto_maximo ? (p.monto_maximo / 1_000_000).toFixed(1) : '0.0'}M
+                              </option>
+                            )
+                          })}
+                        </select>
+                    }
                   </div>
 
                   {cuotaPreview > 0 && (
@@ -347,16 +370,20 @@ export default function CotizadorVehiculo() {
             )
           })}
 
-          {/* Gastos bancarios */}
+          {/* Gastos bancarios — se oculta al imprimir si no hay financiación */}
+          {(!isPrinting || montoActivo > 0) && (
           <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <div className="form-group" style={{ minWidth: '200px' }}>
                 <label className="form-label">Banco</label>
-                <select className="form-select" value={banco} onChange={e => setBanco(e.target.value)}>
-                  <option value="chubut">Banco Chubut (1.2%)</option>
-                  <option value="santacruz">Banco Santa Cruz (1.4%)</option>
-                </select>
+                {isPrinting
+                  ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>{banco === 'chubut' ? 'Banco Chubut (1.2%)' : 'Banco Santa Cruz (1.4%)'}</div>
+                  : <select className="form-select" value={banco} onChange={e => setBanco(e.target.value)}>
+                      <option value="chubut">Banco Chubut (1.2%)</option>
+                      <option value="santacruz">Banco Santa Cruz (1.4%)</option>
+                    </select>
+                }
               </div>
               <div style={{ display: 'flex', gap: '24px' }}>
                 <div>
@@ -370,6 +397,7 @@ export default function CotizadorVehiculo() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Resumen + Observaciones */}
           <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
@@ -378,7 +406,7 @@ export default function CotizadorVehiculo() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[
                   ['Valor del vehículo', precioBase],
-                  ['Gastos bancarios', gastosBancarios],
+                  ...(montoActivo > 0 ? [['Gastos bancarios', gastosBancarios]] : []),
                 ].map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                     <span style={{ color: '#4a5568' }}>{label}</span>
@@ -387,9 +415,9 @@ export default function CotizadorVehiculo() {
                 ))}
                 <div style={{ borderTop: '1px solid #e2e6ec', margin: '4px 0' }} />
                 {[
-                  ['Entrega (usado)', entregaNum],
-                  ['Monto a financiar', montoActivo],
-                  ['Descuento', descuentoNum],
+                  ...(entregaNum > 0 ? [['Entrega (usado)', entregaNum]] : []),
+                  ...(montoActivo > 0 ? [['Monto a financiar', montoActivo]] : []),
+                  ...(descuentoNum > 0 ? [['Descuento', descuentoNum]] : []),
                 ].map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                     <span style={{ color: '#4a5568' }}>{label}</span>
@@ -406,16 +434,22 @@ export default function CotizadorVehiculo() {
               </div>
             </div>
 
+            {/* Observaciones — se oculta al imprimir si está vacía */}
+            {(!isPrinting || observaciones.trim()) && (
             <div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Observaciones</div>
-              <textarea
-                className="form-textarea"
-                value={observaciones}
-                onChange={e => setObservaciones(e.target.value)}
-                placeholder="Notas adicionales para esta cotización..."
-                style={{ minHeight: '150px', width: '100%', resize: 'vertical' }}
-              />
+              {isPrinting
+                ? <div style={{ fontSize: '14px', color: '#1a202c', whiteSpace: 'pre-wrap' }}>{observaciones}</div>
+                : <textarea
+                    className="form-textarea"
+                    value={observaciones}
+                    onChange={e => setObservaciones(e.target.value)}
+                    placeholder="Notas adicionales para esta cotización..."
+                    style={{ minHeight: '150px', width: '100%', resize: 'vertical' }}
+                  />
+              }
             </div>
+            )}
           </div>
 
           <div style={{ padding: '10px 24px 20px', color: '#8896a7', fontSize: '12px', borderTop: '1px solid #e2e6ec' }}>
