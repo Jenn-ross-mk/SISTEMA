@@ -94,11 +94,13 @@ export default function AdminCotizaciones() {
           </div>
         )}
         <div className="form-group" style={{ minWidth: '150px' }}>
-          <label className="form-label">Provincia</label>
+          <label className="form-label">Localidad</label>
           <select className="form-select" value={filtroProvincia} onChange={e => setFiltroProvincia(e.target.value)}>
             <option value="">Todas</option>
-            <option value="chubut">Chubut</option>
-            <option value="santacruz">Santa Cruz</option>
+            <option value="comodoro">Comodoro Rivadavia</option>
+            <option value="trelew">Trelew</option>
+            <option value="madryn">Puerto Madryn</option>
+            <option value="esquel">Esquel</option>
           </select>
         </div>
         <div className="form-group" style={{ minWidth: '150px' }}>
@@ -136,7 +138,7 @@ export default function AdminCotizaciones() {
                       {isAdmin && <th>Vendedor</th>}
                       <th>Cliente</th>
                       <th>Vehículo</th>
-                      <th>Provincia</th>
+                      <th>Localidad</th>
                       <th className="text-right">Saldo</th>
                       <th style={{ textAlign: 'center' }}>Acc.</th>
                     </tr>
@@ -197,7 +199,7 @@ export default function AdminCotizaciones() {
                 ['Vendedor', selected.vendedor_nombre],
                 ['Cliente', selected.cliente_nombre],
                 ['Vehículo', selected.vehiculo_descripcion],
-                ['Provincia', selected.provincia],
+                ['Localidad', selected.provincia],
               ].map(([k, v]) => (
                 <div key={k} style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
