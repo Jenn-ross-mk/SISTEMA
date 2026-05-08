@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
+const LOCALIDADES = ['Comodoro Rivadavia', 'Trelew', 'Puerto Madryn', 'Esquel']
+
 export default function AdminVendedores() {
   const [vendedores, setVendedores] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
-  const [form, setForm] = useState({ nombre: '', email: '', password: '', rol: 'vendedor' })
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', rol: 'vendedor', localidad: '' })
   const [error, setError] = useState('')
+  const [editandoLocalidad, setEditandoLocalidad] = useState(null)
 
   async function load() {
     const { data } = await supabase.from('profiles').select('*').order('nombre')
@@ -27,8 +30,6 @@ export default function AdminVendedores() {
     e.preventDefault()
     setError('')
     setSaving(true)
-    // Create user via Supabase admin — needs service role key for production
-    // With anon key, users sign up themselves. For admin creation, use signUp:
     const { error: err } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -41,11 +42,24 @@ export default function AdminVendedores() {
       setSaving(false)
       return
     }
+    if (form.localidad) {
+      setTimeout(async () => {
+        const { data: p } = await supabase.from('profiles').select('id').eq('nombre', form.nombre).single()
+        if (p) await supabase.from('profiles').update({ localidad: form.localidad }).eq('id', p.id)
+      }, 1500)
+    }
     showToast('Usuario creado. Recibirá un email de confirmación.')
     setShowModal(false)
-    setForm({ nombre: '', email: '', password: '', rol: 'vendedor' })
-    setTimeout(load, 1000)
+    setForm({ nombre: '', email: '', password: '', rol: 'vendedor', localidad: '' })
+    setTimeout(load, 2000)
     setSaving(false)
+  }
+
+  async function handleGuardarLocalidad(v, nuevaLocalidad) {
+    await supabase.from('profiles').update({ localidad: nuevaLocalidad }).eq('id', v.id)
+    setVendedores(prev => prev.map(x => x.id === v.id ? { ...x, localidad: nuevaLocalidad } : x))
+    setEditandoLocalidad(null)
+    showToast('Localidad actualizada')
   }
 
   async function toggleActivo(v) {
@@ -79,7 +93,6 @@ export default function AdminVendedores() {
         </button>
       </div>
 
-      {/* Info note */}
       <div style={{ background: 'rgba(0,51,102,0.06)', border: '1px solid rgba(0,51,102,0.15)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: '#003366' }}>
         <strong>Nota:</strong> Al crear un usuario, recibirá un email de confirmación en su casilla. Una vez confirmado, podrá ingresar con su email y contraseña.
       </div>
@@ -93,6 +106,7 @@ export default function AdminVendedores() {
               <thead>
                 <tr>
                   <th>Nombre</th>
+                  <th>Localidad</th>
                   <th>Rol</th>
                   <th>Estado</th>
                   <th>Desde</th>
@@ -109,6 +123,33 @@ export default function AdminVendedores() {
                         </div>
                         <span style={{ fontWeight: '500' }}>{v.nombre}</span>
                       </div>
+                    </td>
+                    <td>
+                      {editandoLocalidad === v.id ? (
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <select
+                            className="form-select"
+                            defaultValue={v.localidad || ''}
+                            style={{ fontSize: '13px', padding: '4px 8px', minWidth: '160px' }}
+                            onChange={e => handleGuardarLocalidad(v, e.target.value)}
+                          >
+                            <option value="">Sin asignar</option>
+                            {LOCALIDADES.map(l => <option key={l} value={l}>{l}</option>)}
+                          </select>
+                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditandoLocalidad(null)} title="Cancelar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '13px', color: v.localidad ? '#1a202c' : '#8896a7' }}>
+                            {v.localidad || 'Sin asignar'}
+                          </span>
+                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditandoLocalidad(v.id)} title="Editar localidad">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td>
                       <span className={`badge ${v.rol === 'admin' ? 'badge-navy' : 'badge-green'}`}>
@@ -141,7 +182,6 @@ export default function AdminVendedores() {
         )}
       </div>
 
-      {/* Modal nuevo usuario */}
       {showModal && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal" style={{ maxWidth: '460px' }}>
@@ -170,6 +210,13 @@ export default function AdminVendedores() {
                   <select className="form-select" value={form.rol} onChange={e => setForm(p => ({ ...p, rol: e.target.value }))}>
                     <option value="vendedor">Vendedor</option>
                     <option value="admin">Administrador</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Localidad</label>
+                  <select className="form-select" value={form.localidad} onChange={e => setForm(p => ({ ...p, localidad: e.target.value }))}>
+                    <option value="">Sin asignar</option>
+                    {LOCALIDADES.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
                 {error && <div style={{ padding: '10px', background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.2)', borderRadius: '6px', color: '#c0392b', fontSize: '13px' }}>{error}</div>}
