@@ -28,6 +28,14 @@ const NAV = [
       <polyline points="10 9 9 9 8 9"/>
     </svg>
   )},
+  { to: '/admin/formularios', label: 'Formularios', icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      <line x1="8" y1="9" x2="10" y2="9"/>
+    </svg>
+  )},
 ]
 
 export default function AdminLayout() {
@@ -36,7 +44,6 @@ export default function AdminLayout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar */}
       <aside style={{
         width: '240px',
         background: '#00224d',
@@ -48,7 +55,6 @@ export default function AdminLayout() {
         height: '100vh',
         overflow: 'hidden',
       }}>
-        {/* Brand */}
         <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5">
@@ -62,33 +68,25 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {NAV.map(({ to, label, icon, exact }) => (
             <NavLink key={to} to={to} end={exact}
               style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 12px', borderRadius: '8px', textDecoration: 'none',
                 color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
                 background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                fontSize: '14px',
-                fontWeight: isActive ? '600' : '400',
+                fontSize: '14px', fontWeight: isActive ? '600' : '400',
                 transition: 'all 0.15s',
               })}
-              onMouseOver={e => { if (!e.currentTarget.classList.contains('active')) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-              onMouseOut={e => { if (!e.currentTarget.classList.contains('active')) e.currentTarget.style.background = 'transparent' }}
+              onMouseOver={e => { if (!e.currentTarget.getAttribute('aria-current')) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+              onMouseOut={e => { if (!e.currentTarget.getAttribute('aria-current')) e.currentTarget.style.background = 'transparent' }}
             >
-              {icon}
-              {label}
+              {icon}{label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Footer */}
         <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '13px', fontWeight: '700', flexShrink: 0 }}>
@@ -100,27 +98,20 @@ export default function AdminLayout() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={() => navigate('/')}
-              style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
+            <button onClick={() => navigate('/')} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            >
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
               Ver cotizador
             </button>
-            <button
-              onClick={signOut}
-              style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
+            <button onClick={signOut} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            >
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
               Salir
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
       <main style={{ flex: 1, overflow: 'auto', background: '#f8f9fb' }}>
         <Outlet />
       </main>

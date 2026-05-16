@@ -1,17 +1,17 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function ClienteLayout() {
   const { profile, signOut } = useAuth()
-  const navigate = useNavigate()
+  const location = useLocation()
 
-  async function handleSignOut() {
-    await signOut()
-  }
+  const navItems = [
+    { to: '/', label: 'Cotizador', exact: true },
+    { to: '/formularios', label: 'Formularios' },
+  ]
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
-      {/* Header */}
       <header style={{
         background: '#003366',
         padding: '0 24px',
@@ -24,16 +24,40 @@ export default function ClienteLayout() {
         top: 0,
         zIndex: 100,
       }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5">
-            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-            <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-          </svg>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: '700', fontSize: '22px', color: 'white', letterSpacing: '0.06em' }}>
-            AKAR
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginLeft: '2px' }}>Cotizador</span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5">
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+            </svg>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: '700', fontSize: '22px', color: 'white', letterSpacing: '0.06em' }}>
+              AKAR
+            </span>
+          </Link>
+
+          <nav style={{ display: 'flex', gap: '2px' }}>
+            {navItems.map(({ to, label, exact }) => {
+              const isActive = exact ? location.pathname === to : location.pathname.startsWith(to)
+              return (
+                <Link key={to} to={to} style={{
+                  color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+                  fontSize: '14px',
+                  fontWeight: isActive ? '600' : '400',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  textDecoration: 'none',
+                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  transition: 'all 0.15s',
+                }}
+                  onMouseOver={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                  onMouseOut={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {profile?.rol === 'admin' && (
@@ -62,21 +86,19 @@ export default function ClienteLayout() {
               <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{profile?.rol}</div>
             </div>
           </div>
-          <button onClick={handleSignOut} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', transition: 'all 0.15s' }}
-            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'white'; }}
-            onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+          <button onClick={signOut} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', transition: 'all 0.15s' }}
+            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'white' }}
+            onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)' }}
           >
             Salir
           </button>
         </div>
       </header>
 
-      {/* Content */}
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer style={{ background: '#003366', padding: '14px 24px', textAlign: 'center' }}>
         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2026 Akar Automotores. Todos los derechos reservados.</span>
       </footer>

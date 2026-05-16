@@ -4,12 +4,14 @@ import LoginPage from './pages/LoginPage'
 import ClienteLayout from './pages/cliente/ClienteLayout'
 import VehiculosIndex from './pages/cliente/VehiculosIndex'
 import CotizadorVehiculo from './pages/cliente/CotizadorVehiculo'
+import FormulariosPage from './pages/cliente/FormulariosPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVehiculos from './pages/admin/AdminVehiculos'
 import AdminVehiculoForm from './pages/admin/AdminVehiculoForm'
 import AdminVendedores from './pages/admin/AdminVendedores'
 import AdminCotizaciones from './pages/admin/AdminCotizaciones'
+import AdminFormularios from './pages/admin/AdminFormularios'
 
 function PrivateRoute({ children, adminOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -29,13 +31,12 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
 
-      {/* SECCIÓN CLIENTE */}
       <Route path="/" element={<PrivateRoute><ClienteLayout /></PrivateRoute>}>
         <Route index element={<VehiculosIndex />} />
         <Route path="vehiculo/:id" element={<CotizadorVehiculo />} />
+        <Route path="formularios" element={<FormulariosPage />} />
       </Route>
 
-      {/* SECCIÓN ADMIN */}
       <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="vehiculos" element={<AdminVehiculos />} />
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="vehiculos/editar/:id" element={<AdminVehiculoForm />} />
         <Route path="vendedores" element={<AdminVendedores />} />
         <Route path="cotizaciones" element={<AdminCotizaciones />} />
+        <Route path="formularios" element={<AdminFormularios />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

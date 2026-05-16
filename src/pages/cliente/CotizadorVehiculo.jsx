@@ -173,9 +173,28 @@ export default function CotizadorVehiculo() {
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' })
     setIsPrinting(false)
     const pdf = new jsPDF('p', 'mm', 'a4')
-    const w = pdf.internal.pageSize.getWidth() - 20
-    const h = (canvas.height * w) / canvas.width
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, w, h)
+    const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
+    const margin = 10
+    const usableW = pageW - margin * 2
+    const usableH = pageH - margin * 2
+    const canvasPageH = Math.floor((canvas.width / usableW) * usableH)
+    let yOffset = 0
+    while (yOffset < canvas.height) {
+      const sliceH = Math.min(canvasPageH, canvas.height - yOffset)
+      const pageCanvas = document.createElement('canvas')
+      pageCanvas.width = canvas.width
+      pageCanvas.height = sliceH
+      const ctx = pageCanvas.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
+      ctx.drawImage(canvas, 0, -yOffset)
+      const imgData = pageCanvas.toDataURL('image/png')
+      const imgH = (sliceH * usableW) / canvas.width
+      if (yOffset > 0) pdf.addPage()
+      pdf.addImage(imgData, 'PNG', margin, margin, usableW, imgH)
+      yOffset += sliceH
+    }
     pdf.save(`${cliente || 'cotizacion'}.pdf`)
   }
 
@@ -192,11 +211,7 @@ export default function CotizadorVehiculo() {
       <div ref={printRef}>
         {/* Header con logo */}
         <div style={{ background: '#003366', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
-          <img
-            src="/logo-akar.png"
-            alt="Akar Automotores"
-            style={{ height: '64px' }}
-          />
+          <img src="/logo-akar.png" alt="Akar Automotores" style={{ height: '64px' }} />
           <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
             {new Date().toLocaleDateString('es-AR')}
           </div>
@@ -249,7 +264,7 @@ export default function CotizadorVehiculo() {
             </div>
           </div>
 
-          {/* Entrega / Descuento — se oculta al imprimir si ambos son 0 */}
+          {/* Entrega / Descuento */}
           {(!isPrinting || entregaNum > 0 || descuentoNum > 0) && (
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Cliente</div>
@@ -279,17 +294,10 @@ export default function CotizadorVehiculo() {
             const cuotasDelPlan = planesByNombre[nombrePlan]
             const state = planState[nombrePlan] || { monto: '', cuotaId: '' }
             const montoNum = parseMonto(state.monto)
-            const cuotaRow = planes.find(p => p.id === state.cuotaId)
-
-            let cuotaPreview = 0
-            if (cuotaRow && montoNum > 0) {
-              cuotaPreview = (montoNum / UNIDAD_BASE) * cuotaRow.valor_cuota_por_millon
-            }
-
             const isActive = montoNum > 0
             const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
+            const cuotaSeleccionada = planes.find(p => p.id === state.cuotaId)
 
-            // Al imprimir, omitir los planes sin monto
             if (isPrinting && !isActive) return null
 
             return (
@@ -302,75 +310,126 @@ export default function CotizadorVehiculo() {
                   transition: 'opacity 0.2s',
                 }}
               >
+                {/* Encabezado del plan */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {nombrePlan}
                   </div>
-                  {cuotaRow && (
-                    cuotaRow.tna === 0
+                  {cuotaSeleccionada && (
+                    cuotaSeleccionada.tna === 0
                       ? <span className="badge badge-green">TASA 0%</span>
-                      : <span className="badge badge-navy">TNA {cuotaRow.tna}%</span>
+                      : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                  <div className="form-group" style={{ minWidth: '200px' }}>
-                    <label className="form-label">
-                      Monto a financiar
-                      {!isPrinting && cuotaRow?.monto_maximo ? (
-                        <span style={{ fontWeight: '400', textTransform: 'none', letterSpacing: 0, color: '#8896a7', marginLeft: '6px', fontSize: '11px' }}>
-                          máx. ${fmt(cuotaRow.monto_maximo)}
-                        </span>
-                      ) : null}
-                    </label>
-                    {isPrinting
-                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
-                      : <input
-                          className="form-input"
-                          disabled={isDisabled}
-                          value={state.monto}
-                          onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
-                          placeholder="$ 0.00"
-                        />
-                    }
-                  </div>
+                {/* Monto a financiar */}
+                <div className="form-group" style={{ maxWidth: '220px', marginBottom: '14px' }}>
+                  <label className="form-label">Monto a financiar</label>
+                  {isPrinting
+                    ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
+                    : <input
+                        className="form-input"
+                        disabled={isDisabled}
+                        value={state.monto}
+                        onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
+                        placeholder="$ 0.00"
+                      />
+                  }
+                </div>
 
-                  <div className="form-group" style={{ minWidth: '180px' }}>
-                    <label className="form-label">Cuotas</label>
-                    {isPrinting
-                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>{cuotaRow?.cuotas} cuotas</div>
-                      : <select
-                          className="form-select"
-                          disabled={isDisabled}
-                          value={state.cuotaId}
-                          onChange={e => handleCuotaChange(nombrePlan, e.target.value)}
+                {/* Tarjetitas de cuotas */}
+                {isPrinting ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {cuotasDelPlan.map(p => {
+                      const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
+                      const isSelected = p.id === state.cuotaId
+                      const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
+                      return (
+                        <div
+                          key={p.id}
+                          style={{
+                            border: isSelected ? '2px solid #003366' : '1px solid #e2e6ec',
+                            background: isSelected ? '#003366' : '#f8f9fb',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            minWidth: '110px',
+                            opacity: excede ? 0.45 : 1,
+                          }}
                         >
-                          {cuotasDelPlan.map(p => {
-                            const excedeMonto = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
-                            return (
-                              <option key={p.id} value={p.id} disabled={excedeMonto}>
-                                {p.cuotas} — Máx. ${p.monto_maximo ? (p.monto_maximo / 1_000_000).toFixed(1) : '0.0'}M
-                              </option>
-                            )
-                          })}
-                        </select>
-                    }
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
+                            {p.cuotas} cuotas
+                          </div>
+                          <div style={{ fontSize: '15px', fontWeight: '700', color: isSelected ? 'white' : '#1a202c' }}>
+                            {cuotaVal > 0 ? `$${fmt(cuotaVal)}` : '—'}
+                          </div>
+                          {p.monto_maximo && (
+                            <div style={{ fontSize: '10px', color: isSelected ? 'rgba(255,255,255,0.5)' : '#8896a7', marginTop: '3px' }}>
+                              máx. ${(p.monto_maximo / 1_000_000).toFixed(1)}M
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {cuotasDelPlan.map(p => {
+                      const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
+                      const isSelected = p.id === state.cuotaId
+                      const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
 
-                  {cuotaPreview > 0 && (
-                    <div style={{ paddingBottom: '2px' }}>
-                      <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cuota mensual</div>
-                      <div style={{ fontSize: '20px', fontWeight: '700', color: isActive ? '#003366' : '#8896a7' }}>
-                        ${fmt(cuotaPreview)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          disabled={isDisabled || excede}
+                          onClick={() => !excede && handleCuotaChange(nombrePlan, p.id)}
+                          style={{
+                            border: isSelected ? '2px solid #003366' : '1.5px solid #d1d8e0',
+                            background: isSelected ? '#003366' : 'white',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            minWidth: '110px',
+                            cursor: excede ? 'not-allowed' : 'pointer',
+                            opacity: excede ? 0.4 : 1,
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseOver={e => {
+                            if (!isSelected && !excede && !isDisabled) {
+                              e.currentTarget.style.borderColor = '#003366'
+                              e.currentTarget.style.background = '#f0f4fa'
+                            }
+                          }}
+                          onMouseOut={e => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = '#d1d8e0'
+                              e.currentTarget.style.background = 'white'
+                            }
+                          }}
+                        >
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
+                            {p.cuotas} cuotas
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'white' : (cuotaVal > 0 ? '#003366' : '#c0c8d0') }}>
+                            {cuotaVal > 0 ? `$${fmt(cuotaVal)}` : '—'}
+                          </div>
+                          {p.monto_maximo && (
+                            <div style={{ fontSize: '10px', marginTop: '4px', color: excede ? '#c0392b' : (isSelected ? 'rgba(255,255,255,0.5)' : '#8896a7') }}>
+                              {excede ? 'supera el máx.' : `máx. $${(p.monto_maximo / 1_000_000).toFixed(1)}M`}
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })}
 
-          {/* Gastos bancarios — se oculta al imprimir si no hay financiación */}
+          {/* Gastos bancarios */}
           {(!isPrinting || montoActivo > 0) && (
           <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
@@ -434,7 +493,6 @@ export default function CotizadorVehiculo() {
               </div>
             </div>
 
-            {/* Observaciones — se oculta al imprimir si está vacía */}
             {(!isPrinting || observaciones.trim()) && (
             <div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Observaciones</div>
