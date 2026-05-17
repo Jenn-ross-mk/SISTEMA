@@ -52,15 +52,7 @@ function Fila({ label, value }) {
     if (!value) return null;
     return (
         <div style={{ marginBottom: "8px" }}>
-            <div
-                style={{
-                    fontSize: "10px",
-                    color: "#8896a7",
-                    textTransform: "uppercase",
-                    letterSpacing: ".05em",
-                    marginBottom: "2px",
-                }}
-            >
+            <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "2px" }}>
                 {label}
             </div>
             <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>
@@ -72,37 +64,13 @@ function Fila({ label, value }) {
 
 function SeccionDetalle({ title, color = "#003366", children }) {
     return (
-        <div
-            style={{
-                background: "white",
-                border: "0.5px solid #e2e6ec",
-                borderRadius: "8px",
-                overflow: "hidden",
-                marginBottom: "10px",
-            }}
-        >
+        <div style={{ background: "white", border: "0.5px solid #e2e6ec", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
             <div style={{ background: color, padding: "6px 13px" }}>
-                <span
-                    style={{
-                        color: "white",
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        textTransform: "uppercase",
-                        letterSpacing: ".06em",
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                    }}
-                >
+                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {title}
                 </span>
             </div>
-            <div
-                style={{
-                    padding: "12px 13px",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "8px",
-                }}
-            >
+            <div style={{ padding: "12px 13px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {children}
             </div>
         </div>
@@ -111,14 +79,7 @@ function SeccionDetalle({ title, color = "#003366", children }) {
 
 function RadioGroup({ options, value, onChange }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                gap: "6px",
-                flexWrap: "wrap",
-                marginTop: "4px",
-            }}
-        >
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
             {options.map((opt) => (
                 <button
                     key={opt}
@@ -143,27 +104,10 @@ function RadioGroup({ options, value, onChange }) {
 
 function Campo({ label, required, children, span }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "3px",
-                gridColumn: span ? "1/-1" : undefined,
-            }}
-        >
-            <label
-                style={{
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    color: "#8896a7",
-                    textTransform: "uppercase",
-                    letterSpacing: ".05em",
-                }}
-            >
+        <div style={{ display: "flex", flexDirection: "column", gap: "3px", gridColumn: span ? "1/-1" : undefined }}>
+            <label style={{ fontSize: "10px", fontWeight: "700", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em" }}>
                 {label}
-                {required && (
-                    <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>
-                )}
+                {required && <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>}
             </label>
             {children}
         </div>
@@ -172,32 +116,11 @@ function Campo({ label, required, children, span }) {
 
 function ShHead({ color, title, note }) {
     return (
-        <div
-            style={{
-                background: color,
-                padding: "7px 14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-            }}
-        >
-            <span
-                style={{
-                    color: "white",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    textTransform: "uppercase",
-                    letterSpacing: ".06em",
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                }}
-            >
+        <div style={{ background: color, padding: "7px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>
                 {title}
             </span>
-            {note && (
-                <span style={{ fontSize: "10px", color: "rgba(255,255,255,.45)" }}>
-                    {note}
-                </span>
-            )}
+            {note && <span style={{ fontSize: "10px", color: "rgba(255,255,255,.45)" }}>{note}</span>}
         </div>
     );
 }
@@ -211,8 +134,7 @@ function buildPDFHTML(f) {
 
     const row = (label, value) =>
         value
-            ? `
-    <div style="margin-bottom:8px;">
+            ? `<div style="margin-bottom:8px;">
       <div style="font-size:10px;color:#8896a7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;">${label}</div>
       <div style="font-size:13px;font-weight:600;color:#1a202c;">${value}</div>
     </div>`
@@ -229,10 +151,7 @@ function buildPDFHTML(f) {
     let body = "";
 
     if (isGPAT) {
-        body += seccion(
-            "Datos del solicitante",
-            "#003366",
-            `
+        body += seccion("Datos del solicitante", "#003366", `
       ${row("Apellido y nombre", `${d.apellido || ""} ${d.nombre || ""}`)}
       ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
       ${row("Fecha de nacimiento", d.fecha_nacimiento)}
@@ -241,12 +160,8 @@ function buildPDFHTML(f) {
       ${row("Estado civil", d.estado_civil)}
       ${row("Hijos", d.hijos)}
       ${row("Profesión u ocupación", d.profesion)}
-    `,
-        );
-        body += seccion(
-            "Domicilio",
-            "#1a4d88",
-            `
+    `);
+        body += seccion("Domicilio", "#1a4d88", `
       ${row("Calle y número", `${d.calle || ""} ${d.numero_dom || ""}`)}
       ${row("Piso / Depto", `${d.piso || ""} ${d.depto || ""}`)}
       ${row("Localidad", d.localidad)}
@@ -255,12 +170,8 @@ function buildPDFHTML(f) {
       ${row("Tel. fijo", d.tel_fijo)}
       ${row("Celular", d.celular)}
       ${row("Email", d.email)}
-    `,
-        );
-        body += seccion(
-            "Ingresos y actividad — solicitante",
-            "#0f6e56",
-            `
+    `);
+        body += seccion("Ingresos y actividad — solicitante", "#0f6e56", `
       ${row("Tipo de actividad", d.tipo_actividad)}
       ${row("Empleador", d.empleador)}
       ${row("Tel. laboral", d.tel_laboral)}
@@ -268,13 +179,9 @@ function buildPDFHTML(f) {
       ${row("Fecha de ingreso", d.fecha_ingreso)}
       ${row("Antigüedad", d.antiguedad)}
       ${row("Otra actividad", d.otra_actividad)}
-    `,
-        );
+    `);
         if (d.conyuge_nombre || d.conyuge_empleador) {
-            body += seccion(
-                "Datos del cónyuge — empleo",
-                "#0f6e56",
-                `
+            body += seccion("Datos del cónyuge — empleo", "#0f6e56", `
         ${row("Apellido y nombre", d.conyuge_nombre)}
         ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
         ${row("CUIL/CUIT", d.conyuge_cuil)}
@@ -284,24 +191,16 @@ function buildPDFHTML(f) {
         ${row("Fecha de ingreso", d.conyuge_fecha_ingreso)}
         ${row("Antigüedad", d.conyuge_antiguedad)}
         ${row("Otra actividad", d.conyuge_otra_actividad)}
-      `,
-            );
+      `);
         }
     } else if (isJuridica) {
-        body += seccion(
-            "Datos de la empresa",
-            "#003366",
-            `
+        body += seccion("Datos de la empresa", "#003366", `
       ${row("Razón social", d.razon_social)}
       ${row("CUIT", d.cuit)}
       ${row("Domicilio", d.domicilio)}
       ${row("Apoderado", d.apoderado)}
-    `,
-        );
-        body += seccion(
-            "Datos del apoderado",
-            "#1a4d88",
-            `
+    `);
+        body += seccion("Datos del apoderado", "#1a4d88", `
       ${row("Apellido", d.apod_apellido)}
       ${row("Nombre", d.apod_nombre)}
       ${row("Documento", `${d.apod_tipo_doc || "DNI"} ${d.apod_nro_doc || ""}`)}
@@ -311,13 +210,9 @@ function buildPDFHTML(f) {
       ${row("Código postal", d.apod_cp)}
       ${row("CUIL/CUIT", d.apod_cuil)}
       ${row("Estado civil", d.apod_estado_civil)}
-    `,
-        );
+    `);
     } else {
-        body += seccion(
-            "Datos personales",
-            "#003366",
-            `
+        body += seccion("Datos personales", "#003366", `
       ${row("Apellido y nombre", d.apellido_nombre)}
       ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
       ${row("Fecha de nacimiento", d.fecha_nacimiento)}
@@ -328,37 +223,25 @@ function buildPDFHTML(f) {
       ${row("Celular", d.celular)}
       ${row("Domicilio real", d.domicilio)}
       ${row("Email", d.email)}
-    `,
-        );
+    `);
         if (d.conyuge_nombre) {
-            body += seccion(
-                "Datos del cónyuge",
-                "#1a4d88",
-                `
+            body += seccion("Datos del cónyuge", "#1a4d88", `
         ${row("Apellido y nombre", d.conyuge_nombre)}
         ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
-      `,
-            );
+      `);
         }
         if (d.onstar1_nombre || d.onstar2_nombre) {
-            body += seccion(
-                "OnStar — personas de referencia",
-                "#444444",
-                `
+            body += seccion("OnStar — personas de referencia", "#444444", `
         ${row("Dato 1 — nombre", d.onstar1_nombre)}
         ${row("Dato 1 — teléfono", d.onstar1_tel)}
         ${row("Dato 2 — nombre", d.onstar2_nombre)}
         ${row("Dato 2 — teléfono", d.onstar2_tel)}
-      `,
-            );
+      `);
         }
         const cedulas = [
-            d.cedula_sin_cargo_nombre &&
-            `Sin cargo: ${d.cedula_sin_cargo_nombre} — DNI: ${d.cedula_sin_cargo_dni || ""}`,
-            d.cedula_con_cargo_1_nombre &&
-            `Con cargo: ${d.cedula_con_cargo_1_nombre} — DNI: ${d.cedula_con_cargo_1_dni || ""}`,
-            d.cedula_con_cargo_2_nombre &&
-            `Con cargo: ${d.cedula_con_cargo_2_nombre} — DNI: ${d.cedula_con_cargo_2_dni || ""}`,
+            d.cedula_sin_cargo_nombre && `Sin cargo: ${d.cedula_sin_cargo_nombre} — DNI: ${d.cedula_sin_cargo_dni || ""}`,
+            d.cedula_con_cargo_1_nombre && `Con cargo: ${d.cedula_con_cargo_1_nombre} — DNI: ${d.cedula_con_cargo_1_dni || ""}`,
+            d.cedula_con_cargo_2_nombre && `Con cargo: ${d.cedula_con_cargo_2_nombre} — DNI: ${d.cedula_con_cargo_2_dni || ""}`,
         ].filter(Boolean);
         if (cedulas.length) {
             body += `
@@ -381,8 +264,7 @@ function buildPDFHTML(f) {
       </div>
       <div style="border:1px solid #e2e6ec;border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;">
         ${f.cotizacion_numero
-            ? `
-        <div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+            ? `<div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
           <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;font-family:monospace;">${numStr(f.cotizacion_numero)}</div>
           <div style="font-size:13px;color:#1a202c;">${f.cotizacion_descripcion || ""}</div>
         </div>`
@@ -396,6 +278,7 @@ function buildPDFHTML(f) {
       </div>
     </div>`;
 }
+
 function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
     const d = f.datos || {}
     const tipo = f.tipo_formulario
@@ -706,11 +589,11 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                     <Campo label="Número" required><input className="form-input" value={fields.numero_dom || ''} onChange={e => set('numero_dom', e.target.value)} /></Campo>
                                     <Campo label="Piso"><input className="form-input" value={fields.piso || ''} onChange={e => set('piso', e.target.value)} /></Campo>
                                     <Campo label="Depto"><input className="form-input" value={fields.depto || ''} onChange={e => set('depto', e.target.value)} /></Campo>
-                                    <Campo label="Localidad" required style={{ gridColumn: '1/3' }}><input className="form-input" value={fields.localidad || ''} onChange={e => set('localidad', e.target.value)} /></Campo>
+                                    <Campo label="Localidad" required><input className="form-input" value={fields.localidad || ''} onChange={e => set('localidad', e.target.value)} /></Campo>
                                     <Campo label="Provincia"><input className="form-input" value={fields.provincia || ''} onChange={e => set('provincia', e.target.value)} /></Campo>
                                     <Campo label="Cód. postal"><input className="form-input" value={fields.cp || ''} onChange={e => set('cp', e.target.value)} /></Campo>
-                                    <Campo label="Tel. fijo" style={{ gridColumn: '1/3' }}><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
-                                    <Campo label="Celular" required style={{ gridColumn: '3/5' }}><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
+                                    <Campo label="Tel. fijo"><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
+                                    <Campo label="Celular" required><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
                                     <Campo label="Email" required span><input className="form-input" type="email" value={fields.email || ''} onChange={e => set('email', e.target.value)} /></Campo>
                                 </div>
                             </div>
@@ -869,10 +752,10 @@ export default function AdminFormularios() {
         setDownloadingId(f.id)
         try {
             const container = document.createElement('div')
-            container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:white;'
+            container.style.cssText = 'position:fixed;left:0;top:0;width:950px;z-index:-9999;opacity:0;pointer-events:none;background:white;'
             document.body.appendChild(container)
             container.innerHTML = buildPDFHTML(f)
-            await new Promise(r => setTimeout(r, 300))
+            await new Promise(r => setTimeout(r, 500))
             await generatePDFFromElement(
                 container.firstChild,
                 `formulario_${String(f.numero || '').padStart(3, '0')}_${(f.apellido_nombre || 'sin_nombre').replace(/[\s,]+/g, '_')}`
