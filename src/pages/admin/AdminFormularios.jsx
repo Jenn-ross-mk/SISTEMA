@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { generatePDFFromElement, fmt } from "../../lib/pdfUtils";
+import { fmt } from "../../lib/pdfUtils";
 import { useAuth } from "../../context/AuthContext";
 
 const LOCALIDADES = ["Comodoro Rivadavia", "Trelew", "Puerto Madryn", "Esquel"];
@@ -143,7 +143,7 @@ function buildPDFHTML(f) {
     const seccion = (title, color, content) => `
     <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
       <div style="background:${color};padding:6px 13px;">
-        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Condensed',sans-serif;">${title}</span>
+        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:sans-serif;">${title}</span>
       </div>
       <div style="padding:12px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">${content}</div>
     </div>`;
@@ -246,16 +246,16 @@ function buildPDFHTML(f) {
         if (cedulas.length) {
             body += `
         <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-          <div style="background:#444;padding:6px 13px;"><span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Condensed',sans-serif;">Solicitud de cédula azul</span></div>
+          <div style="background:#444;padding:6px 13px;"><span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Solicitud de cédula azul</span></div>
           <div style="padding:12px 13px;">${cedulas.map((c) => `<div style="font-size:12px;margin-bottom:5px;">${c}</div>`).join("")}</div>
         </div>`;
         }
     }
 
     return `
-    <div style="background:white;width:900px;font-family:'Barlow',sans-serif;padding:0;">
+    <div style="background:white;width:900px;font-family:sans-serif;padding:0;">
       <div style="background:#003366;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0;">
-        <div style="color:white;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;letter-spacing:.06em;">AKAR</div>
+        <div style="color:white;font-size:30px;font-weight:700;letter-spacing:.06em;">AKAR</div>
         <div style="color:rgba(255,255,255,.7);font-size:13px;text-align:right;">
           <div style="font-size:16px;font-weight:700;color:white;">${tipoLabel} ${numStr(f.numero)}</div>
           <div>${new Date(f.created_at).toLocaleDateString("es-AR")}</div>
@@ -265,7 +265,7 @@ function buildPDFHTML(f) {
       <div style="border:1px solid #e2e6ec;border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;">
         ${f.cotizacion_numero
             ? `<div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-          <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;font-family:monospace;">${numStr(f.cotizacion_numero)}</div>
+          <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;">${numStr(f.cotizacion_numero)}</div>
           <div style="font-size:13px;color:#1a202c;">${f.cotizacion_descripcion || ""}</div>
         </div>`
             : ""
@@ -751,16 +751,50 @@ export default function AdminFormularios() {
     async function handleDownloadPDF(f) {
         setDownloadingId(f.id)
         try {
-            const container = document.createElement('div')
-            container.style.cssText = 'position:fixed;left:0;top:0;width:950px;z-index:-9999;opacity:0;pointer-events:none;background:white;'
-            document.body.appendChild(container)
-            container.innerHTML = buildPDFHTML(f)
-            await new Promise(r => setTimeout(r, 500))
-            await generatePDFFromElement(
-                container.firstChild,
-                `formulario_${String(f.numero || '').padStart(3, '0')}_${(f.apellido_nombre || 'sin_nombre').replace(/[\s,]+/g, '_')}`
-            )
-            document.body.removeChild(container)
+            const html = buildPDFHTML(f)
+            const iframe = document.createElement('iframe')
+            iframe.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:1200px;opacity:0;pointer-events:none;border:none;'
+            document.body.appendChild(iframe)
+            iframe.contentDocument.open()
+            iframe.contentDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}</style></head><body style="background:white;padding:0;">${html}</body></html>`)
+            iframe.contentDocument.close()
+            await new Promise(r => setTimeout(r, 600))
+            const el = iframe.contentDocument.body.firstChild
+            const { default: html2canvas } = await import('html2canvas')
+            const { jsPDF } = await import('jspdf')
+            const canvas = await html2canvas(el, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                windowWidth: 960,
+                scrollX: 0,
+                scrollY: 0,
+            })
+            document.body.removeChild(iframe)
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            const pageW = pdf.internal.pageSize.getWidth()
+            const pageH = pdf.internal.pageSize.getHeight()
+            const margin = 10
+            const usableW = pageW - margin * 2
+            const usableH = pageH - margin * 2
+            const canvasPageH = Math.floor((canvas.width / usableW) * usableH)
+            let yOffset = 0
+            while (yOffset < canvas.height) {
+                const sliceH = Math.min(canvasPageH, canvas.height - yOffset)
+                const pageCanvas = document.createElement('canvas')
+                pageCanvas.width = canvas.width
+                pageCanvas.height = sliceH
+                const ctx = pageCanvas.getContext('2d')
+                ctx.fillStyle = '#ffffff'
+                ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
+                ctx.drawImage(canvas, 0, -yOffset)
+                const imgData = pageCanvas.toDataURL('image/png')
+                const imgH = (sliceH * usableW) / canvas.width
+                if (yOffset > 0) pdf.addPage()
+                pdf.addImage(imgData, 'PNG', margin, margin, usableW, imgH)
+                yOffset += sliceH
+            }
+            pdf.save(`formulario_${String(f.numero || '').padStart(3, '0')}_${(f.apellido_nombre || 'sin_nombre').replace(/[\s,]+/g, '_')}.pdf`)
             showToast(`PDF ${numStr(f.numero)} descargado`)
         } catch (err) {
             console.error(err)
