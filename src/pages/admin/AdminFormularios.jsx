@@ -52,12 +52,8 @@ function Fila({ label, value }) {
     if (!value) return null;
     return (
         <div style={{ marginBottom: "8px" }}>
-            <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "2px" }}>
-                {label}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>
-                {value}
-            </div>
+            <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "2px" }}>{label}</div>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>{value}</div>
         </div>
     );
 }
@@ -66,9 +62,7 @@ function SeccionDetalle({ title, color = "#003366", children }) {
     return (
         <div style={{ background: "white", border: "0.5px solid #e2e6ec", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
             <div style={{ background: color, padding: "6px 13px" }}>
-                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    {title}
-                </span>
+                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>{title}</span>
             </div>
             <div style={{ padding: "12px 13px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {children}
@@ -81,20 +75,13 @@ function RadioGroup({ options, value, onChange }) {
     return (
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
             {options.map((opt) => (
-                <button
-                    key={opt}
-                    type="button"
-                    onClick={() => onChange(opt)}
+                <button key={opt} type="button" onClick={() => onChange(opt)}
                     style={{
                         background: value === opt ? "#003366" : "#f0f2f5",
                         color: value === opt ? "white" : "#4a5568",
                         border: `0.5px solid ${value === opt ? "#003366" : "#d1d8e0"}`,
-                        borderRadius: "5px",
-                        padding: "4px 10px",
-                        fontSize: "12px",
-                        cursor: "pointer",
-                    }}
-                >
+                        borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer",
+                    }}>
                     {opt}
                 </button>
             ))}
@@ -106,8 +93,7 @@ function Campo({ label, required, children, span }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "3px", gridColumn: span ? "1/-1" : undefined }}>
             <label style={{ fontSize: "10px", fontWeight: "700", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em" }}>
-                {label}
-                {required && <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>}
+                {label}{required && <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>}
             </label>
             {children}
         </div>
@@ -117,9 +103,7 @@ function Campo({ label, required, children, span }) {
 function ShHead({ color, title, note }) {
     return (
         <div style={{ background: color, padding: "7px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>
-                {title}
-            </span>
+            <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>{title}</span>
             {note && <span style={{ fontSize: "10px", color: "rgba(255,255,255,.45)" }}>{note}</span>}
         </div>
     );
@@ -133,17 +117,15 @@ function buildPDFHTML(f) {
     const tipoLabel = TIPO_LABEL[tipo] || tipo;
 
     const row = (label, value) =>
-        value
-            ? `<div style="margin-bottom:8px;">
+        value ? `<div style="margin-bottom:8px;">
       <div style="font-size:10px;color:#8896a7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;">${label}</div>
       <div style="font-size:13px;font-weight:600;color:#1a202c;">${value}</div>
-    </div>`
-            : "";
+    </div>` : "";
 
     const seccion = (title, color, content) => `
     <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
       <div style="background:${color};padding:6px 13px;">
-        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:sans-serif;">${title}</span>
+        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">${title}</span>
       </div>
       <div style="padding:12px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">${content}</div>
     </div>`;
@@ -263,13 +245,11 @@ function buildPDFHTML(f) {
         </div>
       </div>
       <div style="border:1px solid #e2e6ec;border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;">
-        ${f.cotizacion_numero
-            ? `<div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        ${f.cotizacion_numero ? `
+        <div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
           <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;">${numStr(f.cotizacion_numero)}</div>
           <div style="font-size:13px;color:#1a202c;">${f.cotizacion_descripcion || ""}</div>
-        </div>`
-            : ""
-        }
+        </div>` : ""}
         ${body}
         <div style="border-top:0.5px solid #e2e6ec;margin-top:12px;padding-top:10px;display:flex;justify-content:space-between;font-size:11px;color:#8896a7;">
           <span>Formulario ${numStr(f.numero)} · ${tipoLabel}</span>
@@ -522,7 +502,7 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                     <Campo label="Fecha de nacimiento"><input className="form-input" value={fields.fecha_nacimiento || ''} onChange={e => set('fecha_nacimiento', e.target.value)} /></Campo>
                                     <Campo label="Domicilio real" required span><input className="form-input" value={fields.domicilio || ''} onChange={e => set('domicilio', e.target.value)} /></Campo>
                                     <Campo label="Profesión u oficio" required><input className="form-input" value={fields.profesion || ''} onChange={e => set('profesion', e.target.value)} /></Campo>
-                                    <Campo label="Lugar de trabajo"><input className="form-input" value={fields.lugar_trabajo || ''} onChange={e => set('lugar_trabajo', e.target.value)} /></Campo>
+                                    <Campo label="Lugar de trabajo" required><input className="form-input" value={fields.lugar_trabajo || ''} onChange={e => set('lugar_trabajo', e.target.value)} /></Campo>
                                     <Campo label="Teléfono fijo"><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
                                     <Campo label="Celular" required><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
                                     <Campo label="Correo electrónico" required span><input className="form-input" type="email" value={fields.email || ''} onChange={e => set('email', e.target.value)} /></Campo>
@@ -769,6 +749,8 @@ export default function AdminFormularios() {
                 windowWidth: 960,
                 scrollX: 0,
                 scrollY: 0,
+                foreignObjectRendering: false,
+                logging: false,
             })
             document.body.removeChild(iframe)
             const pdf = new jsPDF('p', 'mm', 'a4')
