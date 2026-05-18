@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { generatePDFFromElement, fmt } from "../../lib/pdfUtils";
+import { fmt } from "../../lib/pdfUtils";
 import { useAuth } from "../../context/AuthContext";
 
 const LOCALIDADES = ["Comodoro Rivadavia", "Trelew", "Puerto Madryn", "Esquel"];
@@ -52,57 +52,19 @@ function Fila({ label, value }) {
     if (!value) return null;
     return (
         <div style={{ marginBottom: "8px" }}>
-            <div
-                style={{
-                    fontSize: "10px",
-                    color: "#8896a7",
-                    textTransform: "uppercase",
-                    letterSpacing: ".05em",
-                    marginBottom: "2px",
-                }}
-            >
-                {label}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>
-                {value}
-            </div>
+            <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "2px" }}>{label}</div>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>{value}</div>
         </div>
     );
 }
 
 function SeccionDetalle({ title, color = "#003366", children }) {
     return (
-        <div
-            style={{
-                background: "white",
-                border: "0.5px solid #e2e6ec",
-                borderRadius: "8px",
-                overflow: "hidden",
-                marginBottom: "10px",
-            }}
-        >
+        <div style={{ background: "white", border: "0.5px solid #e2e6ec", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
             <div style={{ background: color, padding: "6px 13px" }}>
-                <span
-                    style={{
-                        color: "white",
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        textTransform: "uppercase",
-                        letterSpacing: ".06em",
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                    }}
-                >
-                    {title}
-                </span>
+                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>{title}</span>
             </div>
-            <div
-                style={{
-                    padding: "12px 13px",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "8px",
-                }}
-            >
+            <div style={{ padding: "12px 13px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {children}
             </div>
         </div>
@@ -111,29 +73,15 @@ function SeccionDetalle({ title, color = "#003366", children }) {
 
 function RadioGroup({ options, value, onChange }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                gap: "6px",
-                flexWrap: "wrap",
-                marginTop: "4px",
-            }}
-        >
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
             {options.map((opt) => (
-                <button
-                    key={opt}
-                    type="button"
-                    onClick={() => onChange(opt)}
+                <button key={opt} type="button" onClick={() => onChange(opt)}
                     style={{
                         background: value === opt ? "#003366" : "#f0f2f5",
                         color: value === opt ? "white" : "#4a5568",
                         border: `0.5px solid ${value === opt ? "#003366" : "#d1d8e0"}`,
-                        borderRadius: "5px",
-                        padding: "4px 10px",
-                        fontSize: "12px",
-                        cursor: "pointer",
-                    }}
-                >
+                        borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer",
+                    }}>
                     {opt}
                 </button>
             ))}
@@ -143,27 +91,9 @@ function RadioGroup({ options, value, onChange }) {
 
 function Campo({ label, required, children, span }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "3px",
-                gridColumn: span ? "1/-1" : undefined,
-            }}
-        >
-            <label
-                style={{
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    color: "#8896a7",
-                    textTransform: "uppercase",
-                    letterSpacing: ".05em",
-                }}
-            >
-                {label}
-                {required && (
-                    <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>
-                )}
+        <div style={{ display: "flex", flexDirection: "column", gap: "3px", gridColumn: span ? "1/-1" : undefined }}>
+            <label style={{ fontSize: "10px", fontWeight: "700", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                {label}{required && <span style={{ color: "#c0392b", marginLeft: "2px" }}>*</span>}
             </label>
             {children}
         </div>
@@ -172,231 +102,14 @@ function Campo({ label, required, children, span }) {
 
 function ShHead({ color, title, note }) {
     return (
-        <div
-            style={{
-                background: color,
-                padding: "7px 14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-            }}
-        >
-            <span
-                style={{
-                    color: "white",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    textTransform: "uppercase",
-                    letterSpacing: ".06em",
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                }}
-            >
-                {title}
-            </span>
-            {note && (
-                <span style={{ fontSize: "10px", color: "rgba(255,255,255,.45)" }}>
-                    {note}
-                </span>
-            )}
+        <div style={{ background: color, padding: "7px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", fontFamily: "'Barlow Condensed', sans-serif" }}>{title}</span>
+            {note && <span style={{ fontSize: "10px", color: "rgba(255,255,255,.45)" }}>{note}</span>}
         </div>
     );
 }
 
-function buildPDFHTML(f) {
-    const d = f.datos || {};
-    const tipo = f.tipo_formulario;
-    const isGPAT = tipo === "gpat";
-    const isJuridica = tipo === "persona_juridica";
-    const tipoLabel = TIPO_LABEL[tipo] || tipo;
-
-    const row = (label, value) =>
-        value
-            ? `
-    <div style="margin-bottom:8px;">
-      <div style="font-size:10px;color:#8896a7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;">${label}</div>
-      <div style="font-size:13px;font-weight:600;color:#1a202c;">${value}</div>
-    </div>`
-            : "";
-
-    const seccion = (title, color, content) => `
-    <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-      <div style="background:${color};padding:6px 13px;">
-        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Condensed',sans-serif;">${title}</span>
-      </div>
-      <div style="padding:12px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">${content}</div>
-    </div>`;
-
-    let body = "";
-
-    if (isGPAT) {
-        body += seccion(
-            "Datos del solicitante",
-            "#003366",
-            `
-      ${row("Apellido y nombre", `${d.apellido || ""} ${d.nombre || ""}`)}
-      ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.fecha_nacimiento)}
-      ${row("CUIL/CUIT", d.cuil)}
-      ${row("Condición IVA", d.condicion_iva)}
-      ${row("Estado civil", d.estado_civil)}
-      ${row("Hijos", d.hijos)}
-      ${row("Profesión u ocupación", d.profesion)}
-    `,
-        );
-        body += seccion(
-            "Domicilio",
-            "#1a4d88",
-            `
-      ${row("Calle y número", `${d.calle || ""} ${d.numero_dom || ""}`)}
-      ${row("Piso / Depto", `${d.piso || ""} ${d.depto || ""}`)}
-      ${row("Localidad", d.localidad)}
-      ${row("Provincia", d.provincia)}
-      ${row("Cód. postal", d.cp)}
-      ${row("Tel. fijo", d.tel_fijo)}
-      ${row("Celular", d.celular)}
-      ${row("Email", d.email)}
-    `,
-        );
-        body += seccion(
-            "Ingresos y actividad — solicitante",
-            "#0f6e56",
-            `
-      ${row("Tipo de actividad", d.tipo_actividad)}
-      ${row("Empleador", d.empleador)}
-      ${row("Tel. laboral", d.tel_laboral)}
-      ${row("Ingreso mensual neto", d.ingreso_neto)}
-      ${row("Fecha de ingreso", d.fecha_ingreso)}
-      ${row("Antigüedad", d.antiguedad)}
-      ${row("Otra actividad", d.otra_actividad)}
-    `,
-        );
-        if (d.conyuge_nombre || d.conyuge_empleador) {
-            body += seccion(
-                "Datos del cónyuge — empleo",
-                "#0f6e56",
-                `
-        ${row("Apellido y nombre", d.conyuge_nombre)}
-        ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
-        ${row("CUIL/CUIT", d.conyuge_cuil)}
-        ${row("Tipo de actividad", d.conyuge_tipo_actividad)}
-        ${row("Empleador", d.conyuge_empleador)}
-        ${row("Ingreso mensual neto", d.conyuge_ingreso)}
-        ${row("Fecha de ingreso", d.conyuge_fecha_ingreso)}
-        ${row("Antigüedad", d.conyuge_antiguedad)}
-        ${row("Otra actividad", d.conyuge_otra_actividad)}
-      `,
-            );
-        }
-    } else if (isJuridica) {
-        body += seccion(
-            "Datos de la empresa",
-            "#003366",
-            `
-      ${row("Razón social", d.razon_social)}
-      ${row("CUIT", d.cuit)}
-      ${row("Domicilio", d.domicilio)}
-      ${row("Apoderado", d.apoderado)}
-    `,
-        );
-        body += seccion(
-            "Datos del apoderado",
-            "#1a4d88",
-            `
-      ${row("Apellido", d.apod_apellido)}
-      ${row("Nombre", d.apod_nombre)}
-      ${row("Documento", `${d.apod_tipo_doc || "DNI"} ${d.apod_nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.apod_fecha_nac)}
-      ${row("Teléfono", d.apod_tel)}
-      ${row("Email", d.apod_email)}
-      ${row("Código postal", d.apod_cp)}
-      ${row("CUIL/CUIT", d.apod_cuil)}
-      ${row("Estado civil", d.apod_estado_civil)}
-    `,
-        );
-    } else {
-        body += seccion(
-            "Datos personales",
-            "#003366",
-            `
-      ${row("Apellido y nombre", d.apellido_nombre)}
-      ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.fecha_nacimiento)}
-      ${row("Estado civil", d.estado_civil)}
-      ${row("Profesión u oficio", d.profesion)}
-      ${row("Lugar de trabajo", d.lugar_trabajo)}
-      ${row("Tel. fijo", d.tel_fijo)}
-      ${row("Celular", d.celular)}
-      ${row("Domicilio real", d.domicilio)}
-      ${row("Email", d.email)}
-    `,
-        );
-        if (d.conyuge_nombre) {
-            body += seccion(
-                "Datos del cónyuge",
-                "#1a4d88",
-                `
-        ${row("Apellido y nombre", d.conyuge_nombre)}
-        ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
-      `,
-            );
-        }
-        if (d.onstar1_nombre || d.onstar2_nombre) {
-            body += seccion(
-                "OnStar — personas de referencia",
-                "#444444",
-                `
-        ${row("Dato 1 — nombre", d.onstar1_nombre)}
-        ${row("Dato 1 — teléfono", d.onstar1_tel)}
-        ${row("Dato 2 — nombre", d.onstar2_nombre)}
-        ${row("Dato 2 — teléfono", d.onstar2_tel)}
-      `,
-            );
-        }
-        const cedulas = [
-            d.cedula_sin_cargo_nombre &&
-            `Sin cargo: ${d.cedula_sin_cargo_nombre} — DNI: ${d.cedula_sin_cargo_dni || ""}`,
-            d.cedula_con_cargo_1_nombre &&
-            `Con cargo: ${d.cedula_con_cargo_1_nombre} — DNI: ${d.cedula_con_cargo_1_dni || ""}`,
-            d.cedula_con_cargo_2_nombre &&
-            `Con cargo: ${d.cedula_con_cargo_2_nombre} — DNI: ${d.cedula_con_cargo_2_dni || ""}`,
-        ].filter(Boolean);
-        if (cedulas.length) {
-            body += `
-        <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-          <div style="background:#444;padding:6px 13px;"><span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Condensed',sans-serif;">Solicitud de cédula azul</span></div>
-          <div style="padding:12px 13px;">${cedulas.map((c) => `<div style="font-size:12px;margin-bottom:5px;">${c}</div>`).join("")}</div>
-        </div>`;
-        }
-    }
-
-    return `
-    <div style="background:white;width:900px;font-family:'Barlow',sans-serif;padding:0;">
-      <div style="background:#003366;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0;">
-        <div style="color:white;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;letter-spacing:.06em;">AKAR</div>
-        <div style="color:rgba(255,255,255,.7);font-size:13px;text-align:right;">
-          <div style="font-size:16px;font-weight:700;color:white;">${tipoLabel} ${numStr(f.numero)}</div>
-          <div>${new Date(f.created_at).toLocaleDateString("es-AR")}</div>
-          <div style="margin-top:2px;">Vendedor: ${f.vendedor_nombre}</div>
-        </div>
-      </div>
-      <div style="border:1px solid #e2e6ec;border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;">
-        ${f.cotizacion_numero
-            ? `
-        <div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-          <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;font-family:monospace;">${numStr(f.cotizacion_numero)}</div>
-          <div style="font-size:13px;color:#1a202c;">${f.cotizacion_descripcion || ""}</div>
-        </div>`
-            : ""
-        }
-        ${body}
-        <div style="border-top:0.5px solid #e2e6ec;margin-top:12px;padding-top:10px;display:flex;justify-content:space-between;font-size:11px;color:#8896a7;">
-          <span>Formulario ${numStr(f.numero)} · ${tipoLabel}</span>
-          <span>Enviado por ${f.vendedor_nombre} el ${new Date(f.created_at).toLocaleString("es-AR")}</span>
-        </div>
-      </div>
-    </div>`;
-}
-function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
+function PanelDetalle({ f, onClose }) {
     const d = f.datos || {}
     const tipo = f.tipo_formulario
     const isGPAT = tipo === 'gpat'
@@ -410,17 +123,9 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                     <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '11px', background: '#003366', color: 'white', borderRadius: '4px', padding: '2px 6px' }}>{numStr(f.numero)}</span>
                     <span className={`badge ${BADGE[f.estado] || 'badge-navy'}`}>{ESTADOS[f.estado]}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => onDownload(f)} className="btn btn-ghost btn-sm" disabled={downloadingId === f.id}>
-                        {downloadingId === f.id
-                            ? <div className="spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
-                            : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> PDF</>
-                        }
-                    </button>
-                    <button onClick={onClose} className="btn btn-ghost btn-sm btn-icon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    </button>
-                </div>
+                <button onClick={onClose} className="btn btn-ghost btn-sm btn-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
             </div>
 
             <div style={{ padding: '14px 18px' }}>
@@ -454,14 +159,6 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                             <SeccionDetalle title="Cónyuge" color="#1a4d88">
                                 <Fila label="Apellido y nombre" value={d.conyuge_nombre} />
                                 <Fila label="Documento" value={`${d.conyuge_tipo_doc || ''} ${d.conyuge_nro_doc || ''}`} />
-                            </SeccionDetalle>
-                        )}
-                        {(d.onstar1_nombre || d.onstar2_nombre) && (
-                            <SeccionDetalle title="OnStar" color="#444444">
-                                <Fila label="Dato 1" value={d.onstar1_nombre} />
-                                <Fila label="Teléfono" value={d.onstar1_tel} />
-                                <Fila label="Dato 2" value={d.onstar2_nombre} />
-                                <Fila label="Teléfono" value={d.onstar2_tel} />
                             </SeccionDetalle>
                         )}
                     </>
@@ -525,7 +222,6 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                                 <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '6px 9px', background: '#f8f9fb', borderRadius: '6px', border: '0.5px solid #e2e6ec', textDecoration: 'none', marginBottom: '5px' }}>
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#003366" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                                     <span style={{ fontSize: '12px', color: '#003366', fontWeight: '500', flex: 1 }}>{name}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8896a7" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                                 </a>
                             )
                         })}
@@ -639,7 +335,7 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                     <Campo label="Fecha de nacimiento"><input className="form-input" value={fields.fecha_nacimiento || ''} onChange={e => set('fecha_nacimiento', e.target.value)} /></Campo>
                                     <Campo label="Domicilio real" required span><input className="form-input" value={fields.domicilio || ''} onChange={e => set('domicilio', e.target.value)} /></Campo>
                                     <Campo label="Profesión u oficio" required><input className="form-input" value={fields.profesion || ''} onChange={e => set('profesion', e.target.value)} /></Campo>
-                                    <Campo label="Lugar de trabajo"><input className="form-input" value={fields.lugar_trabajo || ''} onChange={e => set('lugar_trabajo', e.target.value)} /></Campo>
+                                    <Campo label="Lugar de trabajo" required><input className="form-input" value={fields.lugar_trabajo || ''} onChange={e => set('lugar_trabajo', e.target.value)} /></Campo>
                                     <Campo label="Teléfono fijo"><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
                                     <Campo label="Celular" required><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
                                     <Campo label="Correo electrónico" required span><input className="form-input" type="email" value={fields.email || ''} onChange={e => set('email', e.target.value)} /></Campo>
@@ -656,27 +352,6 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                             <input className="form-input" value={fields.conyuge_nro_doc || ''} onChange={e => set('conyuge_nro_doc', e.target.value)} />
                                         </div>
                                     </Campo>
-                                </div>
-                            </div>
-                            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', overflow: 'hidden' }}>
-                                <ShHead color="#444444" title="OnStar — personas de referencia" />
-                                <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    <Campo label="Dato 1 — apellido y nombre"><input className="form-input" value={fields.onstar1_nombre || ''} onChange={e => set('onstar1_nombre', e.target.value)} /></Campo>
-                                    <Campo label="Teléfono"><input className="form-input" value={fields.onstar1_tel || ''} onChange={e => set('onstar1_tel', e.target.value)} /></Campo>
-                                    <Campo label="Dato 2 — apellido y nombre"><input className="form-input" value={fields.onstar2_nombre || ''} onChange={e => set('onstar2_nombre', e.target.value)} /></Campo>
-                                    <Campo label="Teléfono"><input className="form-input" value={fields.onstar2_tel || ''} onChange={e => set('onstar2_tel', e.target.value)} /></Campo>
-                                </div>
-                            </div>
-                            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', overflow: 'hidden' }}>
-                                <ShHead color="#444444" title="Solicitud de cédula azul" />
-                                <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {[{ key: 'cedula_sin_cargo', label: 'Sin cargo' }, { key: 'cedula_con_cargo_1', label: 'Con cargo' }, { key: 'cedula_con_cargo_2', label: 'Con cargo' }].map(({ key, label }) => (
-                                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 120px', gap: '8px', alignItems: 'end' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#8896a7', paddingBottom: '8px' }}>{label}</div>
-                                            <Campo label="Apellido y nombre"><input className="form-input" value={fields[`${key}_nombre`] || ''} onChange={e => set(`${key}_nombre`, e.target.value)} /></Campo>
-                                            <Campo label="DNI"><input className="form-input" value={fields[`${key}_dni`] || ''} onChange={e => set(`${key}_dni`, e.target.value)} /></Campo>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         </>
@@ -706,11 +381,11 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                     <Campo label="Número" required><input className="form-input" value={fields.numero_dom || ''} onChange={e => set('numero_dom', e.target.value)} /></Campo>
                                     <Campo label="Piso"><input className="form-input" value={fields.piso || ''} onChange={e => set('piso', e.target.value)} /></Campo>
                                     <Campo label="Depto"><input className="form-input" value={fields.depto || ''} onChange={e => set('depto', e.target.value)} /></Campo>
-                                    <Campo label="Localidad" required style={{ gridColumn: '1/3' }}><input className="form-input" value={fields.localidad || ''} onChange={e => set('localidad', e.target.value)} /></Campo>
+                                    <Campo label="Localidad" required><input className="form-input" value={fields.localidad || ''} onChange={e => set('localidad', e.target.value)} /></Campo>
                                     <Campo label="Provincia"><input className="form-input" value={fields.provincia || ''} onChange={e => set('provincia', e.target.value)} /></Campo>
                                     <Campo label="Cód. postal"><input className="form-input" value={fields.cp || ''} onChange={e => set('cp', e.target.value)} /></Campo>
-                                    <Campo label="Tel. fijo" style={{ gridColumn: '1/3' }}><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
-                                    <Campo label="Celular" required style={{ gridColumn: '3/5' }}><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
+                                    <Campo label="Tel. fijo"><input className="form-input" value={fields.tel_fijo || ''} onChange={e => set('tel_fijo', e.target.value)} /></Campo>
+                                    <Campo label="Celular" required><input className="form-input" value={fields.celular || ''} onChange={e => set('celular', e.target.value)} /></Campo>
                                     <Campo label="Email" required span><input className="form-input" type="email" value={fields.email || ''} onChange={e => set('email', e.target.value)} /></Campo>
                                 </div>
                             </div>
@@ -834,7 +509,6 @@ export default function AdminFormularios() {
     const [vendedores, setVendedores] = useState([])
     const [selected, setSelected] = useState(null)
     const [toast, setToast] = useState(null)
-    const [downloadingId, setDownloadingId] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [cotizaciones, setCotizaciones] = useState([])
 
@@ -863,27 +537,6 @@ export default function AdminFormularios() {
         setFormularios(prev => prev.filter(x => x.id !== f.id))
         if (selected?.id === f.id) setSelected(null)
         showToast('Formulario eliminado')
-    }
-
-    async function handleDownloadPDF(f) {
-        setDownloadingId(f.id)
-        try {
-            const container = document.createElement('div')
-            container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:white;'
-            document.body.appendChild(container)
-            container.innerHTML = buildPDFHTML(f)
-            await new Promise(r => setTimeout(r, 300))
-            await generatePDFFromElement(
-                container.firstChild,
-                `formulario_${String(f.numero || '').padStart(3, '0')}_${(f.apellido_nombre || 'sin_nombre').replace(/[\s,]+/g, '_')}`
-            )
-            document.body.removeChild(container)
-            showToast(`PDF ${numStr(f.numero)} descargado`)
-        } catch (err) {
-            console.error(err)
-            showToast('Error al generar PDF', 'error')
-        }
-        setDownloadingId(null)
     }
 
     function handleSaved() {
@@ -1014,12 +667,6 @@ export default function AdminFormularios() {
                                                     <button onClick={() => setSelected(f)} className="btn btn-ghost btn-sm btn-icon" title="Ver">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                                                     </button>
-                                                    <button onClick={() => handleDownloadPDF(f)} className="btn btn-ghost btn-sm btn-icon" disabled={downloadingId === f.id} title="PDF">
-                                                        {downloadingId === f.id
-                                                            ? <div className="spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
-                                                            : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                                                        }
-                                                    </button>
                                                     <button onClick={() => handleDelete(f)} className="btn btn-danger btn-sm btn-icon" title="Eliminar">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
                                                     </button>
@@ -1037,8 +684,6 @@ export default function AdminFormularios() {
                     <PanelDetalle
                         f={selected}
                         onClose={() => setSelected(null)}
-                        onDownload={handleDownloadPDF}
-                        downloadingId={downloadingId}
                     />
                 )}
             </div>
