@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { fmt } from '../../lib/pdfUtils'
@@ -15,26 +15,17 @@ const TIPOS_FORMULARIO = [
 
 function numStr(n) { return n ? `#${String(n).padStart(3, '0')}` : '—' }
 
-// Componente radio pills
 function RadioGroup({ options, value, onChange }) {
     return (
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
             {options.map(opt => (
-                <button
-                    key={opt}
-                    type="button"
-                    onClick={() => onChange(opt)}
+                <button key={opt} type="button" onClick={() => onChange(opt)}
                     style={{
                         background: value === opt ? '#003366' : '#f0f2f5',
                         color: value === opt ? 'white' : '#4a5568',
                         border: `0.5px solid ${value === opt ? '#003366' : '#d1d8e0'}`,
-                        borderRadius: '5px',
-                        padding: '4px 10px',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                    }}
-                >
+                        borderRadius: '5px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s',
+                    }}>
                     {opt}
                 </button>
             ))}
@@ -65,23 +56,7 @@ function Campo({ label, required, children, span }) {
 
 function Input({ value, onChange, placeholder, type = 'text', style }) {
     return (
-        <input
-            type={type}
-            className="form-input"
-            value={value || ''}
-            onChange={e => onChange(e.target.value)}
-            placeholder={placeholder}
-            style={style}
-        />
-    )
-}
-
-function Select({ value, onChange, options }) {
-    return (
-        <select className="form-select" value={value || ''} onChange={e => onChange(e.target.value)}>
-            <option value="">Seleccionar...</option>
-            {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <input type={type} className="form-input" value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={style} />
     )
 }
 
@@ -96,13 +71,9 @@ function DocInput({ tipo, numero, onTipo, onNumero }) {
     )
 }
 
-// ---- Secciones del formulario ----
-
 function SeccionHojaDatos({ f, set }) {
-    const casado = f.estado_civil === 'Casado (legal)' || f.estado_civil === 'Concubino'
     return (
         <>
-            {/* Datos personales */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '12px', overflow: 'hidden' }}>
                 <SeccionHeader title="Datos personales" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -113,7 +84,7 @@ function SeccionHojaDatos({ f, set }) {
                     <Campo label="Fecha de nacimiento"><Input value={f.fecha_nacimiento} onChange={v => set('fecha_nacimiento', v)} /></Campo>
                     <Campo label="Domicilio real" required span><Input value={f.domicilio} onChange={v => set('domicilio', v)} /></Campo>
                     <Campo label="Profesión u oficio" required><Input value={f.profesion} onChange={v => set('profesion', v)} /></Campo>
-                    <Campo label="Lugar de trabajo"><Input value={f.lugar_trabajo} onChange={v => set('lugar_trabajo', v)} /></Campo>
+                    <Campo label="Lugar de trabajo" required><Input value={f.lugar_trabajo} onChange={v => set('lugar_trabajo', v)} /></Campo>
                     <Campo label="Teléfono fijo"><Input value={f.tel_fijo} onChange={v => set('tel_fijo', v)} /></Campo>
                     <Campo label="Celular" required><Input value={f.celular} onChange={v => set('celular', v)} /></Campo>
                     <Campo label="Correo electrónico" required span><Input value={f.email} onChange={v => set('email', v)} type="email" /></Campo>
@@ -123,7 +94,6 @@ function SeccionHojaDatos({ f, set }) {
                 </div>
             </div>
 
-            {/* Cónyuge */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
                 <SeccionHeader color="#1a4d88" title="Datos del cónyuge" note="Solo si casado / concubino" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -133,35 +103,6 @@ function SeccionHojaDatos({ f, set }) {
                     </Campo>
                 </div>
             </div>
-
-            {/* OnStar */}
-            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
-                <SeccionHeader color="#444444" title="OnStar — personas de referencia" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12 19.79 19.79 0 0 1 1.94 3.19 2 2 0 0 1 3.9 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>} />
-                <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <Campo label="Dato 1 — apellido y nombre"><Input value={f.onstar1_nombre} onChange={v => set('onstar1_nombre', v)} /></Campo>
-                    <Campo label="Teléfono"><Input value={f.onstar1_tel} onChange={v => set('onstar1_tel', v)} /></Campo>
-                    <Campo label="Dato 2 — apellido y nombre"><Input value={f.onstar2_nombre} onChange={v => set('onstar2_nombre', v)} /></Campo>
-                    <Campo label="Teléfono"><Input value={f.onstar2_tel} onChange={v => set('onstar2_tel', v)} /></Campo>
-                </div>
-            </div>
-
-            {/* Cédula azul */}
-            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
-                <SeccionHeader color="#444444" title="Solicitud de cédula azul" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>} />
-                <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {[
-                        { key: 'cedula_sin_cargo', label: 'Sin cargo' },
-                        { key: 'cedula_con_cargo_1', label: 'Con cargo' },
-                        { key: 'cedula_con_cargo_2', label: 'Con cargo' },
-                    ].map(({ key, label }) => (
-                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 120px', gap: '8px', alignItems: 'end' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#8896a7', paddingBottom: '8px' }}>{label}</div>
-                            <Campo label="Apellido y nombre"><Input value={f[`${key}_nombre`]} onChange={v => set(`${key}_nombre`, v)} /></Campo>
-                            <Campo label="DNI"><Input value={f[`${key}_dni`]} onChange={v => set(`${key}_dni`, v)} /></Campo>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </>
     )
 }
@@ -169,7 +110,6 @@ function SeccionHojaDatos({ f, set }) {
 function SeccionGPAT({ f, set }) {
     return (
         <>
-            {/* Datos solicitante */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '12px', overflow: 'hidden' }}>
                 <SeccionHeader title="Datos del solicitante" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -194,7 +134,6 @@ function SeccionGPAT({ f, set }) {
                 </div>
             </div>
 
-            {/* Domicilio */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
                 <SeccionHeader color="#1a4d88" title="Domicilio" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 80px 60px 60px', gap: '10px' }}>
@@ -211,7 +150,6 @@ function SeccionGPAT({ f, set }) {
                 </div>
             </div>
 
-            {/* Empleo solicitante */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
                 <SeccionHeader color="#0f6e56" title="Ingresos y actividad — solicitante" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -227,7 +165,6 @@ function SeccionGPAT({ f, set }) {
                 </div>
             </div>
 
-            {/* Empleo cónyuge */}
             <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', marginTop: '10px', overflow: 'hidden' }}>
                 <SeccionHeader color="#0f6e56" title="Datos del cónyuge — empleo" note="Solo si casado" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>} />
                 <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -293,10 +230,9 @@ function SeccionPersonaJuridica({ f, set }) {
     )
 }
 
-// ---- Modal principal ----
-
 function FormModal({ cotizaciones, onClose, onSave }) {
     const { profile } = useAuth()
+    const modalBodyRef = useRef()
     const [tipo, setTipo] = useState('hoja_datos')
     const [cotizacionId, setCotizacionId] = useState('')
     const [adjuntos, setAdjuntos] = useState([])
@@ -311,9 +247,12 @@ function FormModal({ cotizaciones, onClose, onSave }) {
     }
 
     async function handleSubmit(estado) {
-        // Validación mínima
-        const nombre = fields.apellido_nombre || (fields.apellido && fields.nombre ? `${fields.apellido}, ${fields.nombre}` : '') || fields.razon_social || ''
+        const nombre = fields.apellido_nombre
+            || (fields.apellido && fields.nombre ? `${fields.apellido}, ${fields.nombre}` : '')
+            || fields.razon_social || ''
         if (!nombre) { setError('El nombre / razón social es requerido'); return }
+        if (tipo === 'hoja_datos' && !fields.lugar_trabajo) { setError('El lugar de trabajo es requerido'); return }
+
         setSaving(true)
         setError('')
         try {
@@ -345,6 +284,49 @@ function FormModal({ cotizaciones, onClose, onSave }) {
 
             const { error: err } = await supabase.from('formularios').insert(payload)
             if (err) throw err
+
+            // Generar PDF capturando el modal renderizado
+            if (estado === 'enviado') {
+                const { default: html2canvas } = await import('html2canvas')
+                const { jsPDF } = await import('jspdf')
+
+                const el = modalBodyRef.current
+                const canvas = await html2canvas(el, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    windowWidth: el.scrollWidth,
+                    windowHeight: el.scrollHeight,
+                })
+
+                const pdf = new jsPDF('p', 'mm', 'a4')
+                const pageW = pdf.internal.pageSize.getWidth()
+                const pageH = pdf.internal.pageSize.getHeight()
+                const margin = 10
+                const usableW = pageW - margin * 2
+                const usableH = pageH - margin * 2
+                const canvasPageH = Math.floor((canvas.width / usableW) * usableH)
+                let yOffset = 0
+                while (yOffset < canvas.height) {
+                    const sliceH = Math.min(canvasPageH, canvas.height - yOffset)
+                    const pageCanvas = document.createElement('canvas')
+                    pageCanvas.width = canvas.width
+                    pageCanvas.height = sliceH
+                    const ctx = pageCanvas.getContext('2d')
+                    ctx.fillStyle = '#ffffff'
+                    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
+                    ctx.drawImage(canvas, 0, -yOffset)
+                    const imgData = pageCanvas.toDataURL('image/png')
+                    const imgH = (sliceH * usableW) / canvas.width
+                    if (yOffset > 0) pdf.addPage()
+                    pdf.addImage(imgData, 'PNG', margin, margin, usableW, imgH)
+                    yOffset += sliceH
+                }
+                const safeName = nombre.replace(/[\s,]+/g, '_').toLowerCase()
+                pdf.save(`formulario_${safeName}.pdf`)
+            }
+
             onSave()
         } catch (err) {
             console.error(err)
@@ -365,9 +347,8 @@ function FormModal({ cotizaciones, onClose, onSave }) {
                     </button>
                 </div>
 
-                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div ref={modalBodyRef} className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-                    {/* Tipo */}
                     <div className="form-group">
                         <label className="form-label">Tipo de formulario *</label>
                         <select className="form-select" value={tipo} onChange={e => { setTipo(e.target.value); setFields({}) }}>
@@ -375,7 +356,6 @@ function FormModal({ cotizaciones, onClose, onSave }) {
                         </select>
                     </div>
 
-                    {/* Cotización vinculada */}
                     <div style={{ background: '#f0f4fa', border: '1px solid #d0daea', borderRadius: '8px', padding: '10px 14px' }}>
                         <label className="form-label" style={{ marginBottom: '6px', display: 'block' }}>Cotización vinculada (opcional)</label>
                         <select className="form-select" value={cotizacionId} onChange={e => setCotizacionId(e.target.value)}>
@@ -394,12 +374,10 @@ function FormModal({ cotizaciones, onClose, onSave }) {
                         )}
                     </div>
 
-                    {/* Secciones según tipo */}
                     {tipo === 'hoja_datos' && <SeccionHojaDatos f={fields} set={set} />}
                     {tipo === 'gpat' && <SeccionGPAT f={fields} set={set} />}
                     {tipo === 'persona_juridica' && <SeccionPersonaJuridica f={fields} set={set} />}
 
-                    {/* Adjuntos */}
                     <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', overflow: 'hidden' }}>
                         <SeccionHeader color="#444444" title="Archivos adjuntos (opcional)" icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>} />
                         <div style={{ padding: '12px 14px' }}>
@@ -432,8 +410,8 @@ function FormModal({ cotizaciones, onClose, onSave }) {
                     </button>
                     <button type="button" className="btn btn-primary" disabled={saving} onClick={() => handleSubmit('enviado')}>
                         {saving
-                            ? <><div className="spinner" style={{ width: '15px', height: '15px', borderWidth: '2px', borderTopColor: 'white' }} /> Enviando...</>
-                            : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg> Enviar formulario</>
+                            ? <><div className="spinner" style={{ width: '15px', height: '15px', borderWidth: '2px', borderTopColor: 'white' }} /> Guardando...</>
+                            : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Descargar PDF</>
                         }
                     </button>
                 </div>
@@ -442,15 +420,12 @@ function FormModal({ cotizaciones, onClose, onSave }) {
     )
 }
 
-// ---- Página principal vendedor ----
-
 const BADGE = { borrador: 'badge-gold', enviado: 'badge-green' }
 const LABEL = { borrador: 'Borrador', enviado: 'Enviado' }
 const TIPO_LABEL = { hoja_datos: 'Hoja datos', gpat: 'GPAT', persona_juridica: 'P. Jurídica' }
 
 export default function FormulariosPage() {
     const { profile } = useAuth()
-    const isAdmin = profile?.rol === 'admin'
     const [formularios, setFormularios] = useState([])
     const [cotizaciones, setCotizaciones] = useState([])
     const [loading, setLoading] = useState(true)
@@ -497,7 +472,7 @@ export default function FormulariosPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                     <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>Formularios</h1>
-                    <p style={{ color: '#8896a7', fontSize: '14px' }}>Completá y enviá hojas de datos del cliente</p>
+                    <p style={{ color: '#8896a7', fontSize: '14px' }}>Completá y descargá formularios del cliente en PDF</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
