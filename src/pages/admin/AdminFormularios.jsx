@@ -35,13 +35,7 @@ const TIPOS_ACTIVIDAD = [
     "Ama de casa",
     "Organismo público",
 ];
-const ESTADOS_CIVILES_FISICA = [
-    "Soltero",
-    "Concubino",
-    "Casado (legal)",
-    "Viudo",
-    "Divorciado (legal)",
-];
+const ESTADOS_CIVILES_FISICA = ["Soltero", "Concubino", "Casado (legal)", "Viudo", "Divorciado (legal)"];
 const ESTADOS_CIVILES_GPAT = ["Soltero", "Casado", "Viudo", "Separado"];
 
 function numStr(n) {
@@ -109,154 +103,7 @@ function ShHead({ color, title, note }) {
     );
 }
 
-// Componente React que renderiza el formulario para PDF
-function FormularioPDFContent({ f }) {
-    const d = f.datos || {};
-    const tipo = f.tipo_formulario;
-    const isGPAT = tipo === "gpat";
-    const isJuridica = tipo === "persona_juridica";
-    const tipoLabel = TIPO_LABEL[tipo] || tipo;
-
-    const Row = ({ label, value }) => {
-        if (!value) return null;
-        return (
-            <div style={{ marginBottom: "8px" }}>
-                <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "1px" }}>{label}</div>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>{value}</div>
-            </div>
-        );
-    };
-
-    const Sec = ({ title, color = "#003366", children }) => (
-        <div style={{ background: "white", border: "0.5px solid #e2e6ec", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
-            <div style={{ background: color, padding: "6px 13px" }}>
-                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em" }}>{title}</span>
-            </div>
-            <div style={{ padding: "12px 13px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                {children}
-            </div>
-        </div>
-    );
-
-    return (
-        <div style={{ background: "white", width: "900px", fontFamily: "sans-serif", padding: "0" }}>
-            <div style={{ background: "#003366", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: "12px 12px 0 0" }}>
-                <div style={{ color: "white", fontSize: "30px", fontWeight: "700", letterSpacing: ".06em" }}>AKAR</div>
-                <div style={{ color: "rgba(255,255,255,.7)", fontSize: "13px", textAlign: "right" }}>
-                    <div style={{ fontSize: "16px", fontWeight: "700", color: "white" }}>{tipoLabel} {numStr(f.numero)}</div>
-                    <div>{new Date(f.created_at).toLocaleDateString("es-AR")}</div>
-                    <div style={{ marginTop: "2px" }}>Vendedor: {f.vendedor_nombre}</div>
-                </div>
-            </div>
-            <div style={{ border: "1px solid #e2e6ec", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "16px 20px" }}>
-                {f.cotizacion_numero && (
-                    <div style={{ background: "#f0f4fa", border: "1px solid #d0daea", borderRadius: "8px", padding: "9px 14px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ background: "#003366", color: "white", borderRadius: "4px", padding: "2px 8px", fontSize: "12px", fontWeight: "800" }}>{numStr(f.cotizacion_numero)}</div>
-                        <div style={{ fontSize: "13px", color: "#1a202c" }}>{f.cotizacion_descripcion || ""}</div>
-                    </div>
-                )}
-
-                {isGPAT && (
-                    <>
-                        <Sec title="Datos del solicitante">
-                            <Row label="Apellido y nombre" value={`${d.apellido || ""} ${d.nombre || ""}`} />
-                            <Row label="Tipo y N° documento" value={`${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`} />
-                            <Row label="Fecha de nacimiento" value={d.fecha_nacimiento} />
-                            <Row label="CUIL/CUIT" value={d.cuil} />
-                            <Row label="Condición IVA" value={d.condicion_iva} />
-                            <Row label="Estado civil" value={d.estado_civil} />
-                            <Row label="Hijos" value={d.hijos} />
-                            <Row label="Profesión u ocupación" value={d.profesion} />
-                        </Sec>
-                        <Sec title="Domicilio" color="#1a4d88">
-                            <Row label="Calle y número" value={`${d.calle || ""} ${d.numero_dom || ""}`} />
-                            <Row label="Piso / Depto" value={`${d.piso || ""} ${d.depto || ""}`} />
-                            <Row label="Localidad" value={d.localidad} />
-                            <Row label="Provincia" value={d.provincia} />
-                            <Row label="Cód. postal" value={d.cp} />
-                            <Row label="Tel. fijo" value={d.tel_fijo} />
-                            <Row label="Celular" value={d.celular} />
-                            <Row label="Email" value={d.email} />
-                        </Sec>
-                        <Sec title="Ingresos y actividad — solicitante" color="#0f6e56">
-                            <Row label="Tipo de actividad" value={d.tipo_actividad} />
-                            <Row label="Empleador" value={d.empleador} />
-                            <Row label="Tel. laboral" value={d.tel_laboral} />
-                            <Row label="Ingreso mensual neto" value={d.ingreso_neto} />
-                            <Row label="Fecha de ingreso" value={d.fecha_ingreso} />
-                            <Row label="Antigüedad" value={d.antiguedad} />
-                            <Row label="Otra actividad" value={d.otra_actividad} />
-                        </Sec>
-                        {(d.conyuge_nombre || d.conyuge_empleador) && (
-                            <Sec title="Datos del cónyuge — empleo" color="#0f6e56">
-                                <Row label="Apellido y nombre" value={d.conyuge_nombre} />
-                                <Row label="Documento" value={`${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`} />
-                                <Row label="CUIL/CUIT" value={d.conyuge_cuil} />
-                                <Row label="Tipo de actividad" value={d.conyuge_tipo_actividad} />
-                                <Row label="Empleador" value={d.conyuge_empleador} />
-                                <Row label="Ingreso mensual neto" value={d.conyuge_ingreso} />
-                                <Row label="Fecha de ingreso" value={d.conyuge_fecha_ingreso} />
-                                <Row label="Antigüedad" value={d.conyuge_antiguedad} />
-                            </Sec>
-                        )}
-                    </>
-                )}
-
-                {isJuridica && (
-                    <>
-                        <Sec title="Datos de la empresa">
-                            <Row label="Razón social" value={d.razon_social} />
-                            <Row label="CUIT" value={d.cuit} />
-                            <div style={{ gridColumn: "1/-1" }}><Row label="Domicilio" value={d.domicilio} /></div>
-                            <div style={{ gridColumn: "1/-1" }}><Row label="Apoderado" value={d.apoderado} /></div>
-                        </Sec>
-                        <Sec title="Datos del apoderado" color="#1a4d88">
-                            <Row label="Apellido" value={d.apod_apellido} />
-                            <Row label="Nombre" value={d.apod_nombre} />
-                            <Row label="Documento" value={`${d.apod_tipo_doc || "DNI"} ${d.apod_nro_doc || ""}`} />
-                            <Row label="Fecha de nacimiento" value={d.apod_fecha_nac} />
-                            <Row label="Teléfono" value={d.apod_tel} />
-                            <Row label="Email" value={d.apod_email} />
-                            <Row label="Código postal" value={d.apod_cp} />
-                            <Row label="CUIL/CUIT" value={d.apod_cuil} />
-                            <Row label="Estado civil" value={d.apod_estado_civil} />
-                        </Sec>
-                    </>
-                )}
-
-                {!isGPAT && !isJuridica && (
-                    <>
-                        <Sec title="Datos personales">
-                            <Row label="Apellido y nombre" value={d.apellido_nombre} />
-                            <Row label="Tipo y N° documento" value={`${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`} />
-                            <Row label="Fecha de nacimiento" value={d.fecha_nacimiento} />
-                            <Row label="Estado civil" value={d.estado_civil} />
-                            <Row label="Profesión u oficio" value={d.profesion} />
-                            <Row label="Lugar de trabajo" value={d.lugar_trabajo} />
-                            <Row label="Tel. fijo" value={d.tel_fijo} />
-                            <Row label="Celular" value={d.celular} />
-                            <div style={{ gridColumn: "1/-1" }}><Row label="Domicilio real" value={d.domicilio} /></div>
-                            <div style={{ gridColumn: "1/-1" }}><Row label="Email" value={d.email} /></div>
-                        </Sec>
-                        {d.conyuge_nombre && (
-                            <Sec title="Datos del cónyuge" color="#1a4d88">
-                                <Row label="Apellido y nombre" value={d.conyuge_nombre} />
-                                <Row label="Documento" value={`${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`} />
-                            </Sec>
-                        )}
-                    </>
-                )}
-
-                <div style={{ borderTop: "0.5px solid #e2e6ec", marginTop: "12px", paddingTop: "10px", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#8896a7" }}>
-                    <span>Formulario {numStr(f.numero)} · {tipoLabel}</span>
-                    <span>Enviado por {f.vendedor_nombre} el {new Date(f.created_at).toLocaleString("es-AR")}</span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
+function PanelDetalle({ f, onClose }) {
     const d = f.datos || {}
     const tipo = f.tipo_formulario
     const isGPAT = tipo === 'gpat'
@@ -270,17 +117,9 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                     <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '11px', background: '#003366', color: 'white', borderRadius: '4px', padding: '2px 6px' }}>{numStr(f.numero)}</span>
                     <span className={`badge ${BADGE[f.estado] || 'badge-navy'}`}>{ESTADOS[f.estado]}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => onDownload(f)} className="btn btn-ghost btn-sm" disabled={downloadingId === f.id}>
-                        {downloadingId === f.id
-                            ? <div className="spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
-                            : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> PDF</>
-                        }
-                    </button>
-                    <button onClick={onClose} className="btn btn-ghost btn-sm btn-icon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    </button>
-                </div>
+                <button onClick={onClose} className="btn btn-ghost btn-sm btn-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
             </div>
 
             <div style={{ padding: '14px 18px' }}>
@@ -402,7 +241,6 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
             || (fields.apellido && fields.nombre ? `${fields.apellido}, ${fields.nombre}` : '')
             || fields.razon_social || ''
         if (!nombre) { setError('El nombre / razón social es requerido'); return }
-        if (tipo === 'hoja_datos' && !fields.lugar_trabajo) { setError('El lugar de trabajo es requerido'); return }
         setSaving(true)
         setError('')
         try {
@@ -665,11 +503,8 @@ export default function AdminFormularios() {
     const [vendedores, setVendedores] = useState([])
     const [selected, setSelected] = useState(null)
     const [toast, setToast] = useState(null)
-    const [downloadingId, setDownloadingId] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [cotizaciones, setCotizaciones] = useState([])
-    const [pdfFormulario, setPdfFormulario] = useState(null)
-    const pdfRef = useState(null)
 
     async function load() {
         const [{ data: f }, { data: v }, { data: c }] = await Promise.all([
@@ -696,67 +531,6 @@ export default function AdminFormularios() {
         setFormularios(prev => prev.filter(x => x.id !== f.id))
         if (selected?.id === f.id) setSelected(null)
         showToast('Formulario eliminado')
-    }
-
-    async function handleDownloadPDF(f) {
-        setDownloadingId(f.id)
-        try {
-            // Renderizar el componente React en un div oculto en el DOM principal
-            const container = document.createElement('div')
-            container.style.cssText = 'position:fixed;left:-9999px;top:0;width:960px;background:white;z-index:-1;'
-            document.body.appendChild(container)
-
-            // Usar ReactDOM para renderizar el componente directamente en el DOM
-            const { createRoot } = await import('react-dom/client')
-            const { default: html2canvas } = await import('html2canvas')
-            const { jsPDF } = await import('jspdf')
-
-            const root = createRoot(container)
-            root.render(<FormularioPDFContent f={f} />)
-
-            // Esperar a que React renderice
-            await new Promise(r => setTimeout(r, 400))
-
-            const el = container.firstChild
-            const canvas = await html2canvas(el, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-            })
-
-            root.unmount()
-            document.body.removeChild(container)
-
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const pageW = pdf.internal.pageSize.getWidth()
-            const pageH = pdf.internal.pageSize.getHeight()
-            const margin = 10
-            const usableW = pageW - margin * 2
-            const usableH = pageH - margin * 2
-            const canvasPageH = Math.floor((canvas.width / usableW) * usableH)
-            let yOffset = 0
-            while (yOffset < canvas.height) {
-                const sliceH = Math.min(canvasPageH, canvas.height - yOffset)
-                const pageCanvas = document.createElement('canvas')
-                pageCanvas.width = canvas.width
-                pageCanvas.height = sliceH
-                const ctx = pageCanvas.getContext('2d')
-                ctx.fillStyle = '#ffffff'
-                ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
-                ctx.drawImage(canvas, 0, -yOffset)
-                const imgData = pageCanvas.toDataURL('image/png')
-                const imgH = (sliceH * usableW) / canvas.width
-                if (yOffset > 0) pdf.addPage()
-                pdf.addImage(imgData, 'PNG', margin, margin, usableW, imgH)
-                yOffset += sliceH
-            }
-            pdf.save(`formulario_${String(f.numero || '').padStart(3, '0')}_${(f.apellido_nombre || 'sin_nombre').replace(/[\s,]+/g, '_')}.pdf`)
-            showToast(`PDF ${numStr(f.numero)} descargado`)
-        } catch (err) {
-            console.error(err)
-            showToast('Error al generar PDF', 'error')
-        }
-        setDownloadingId(null)
     }
 
     function handleSaved() {
@@ -887,12 +661,6 @@ export default function AdminFormularios() {
                                                     <button onClick={() => setSelected(f)} className="btn btn-ghost btn-sm btn-icon" title="Ver">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                                                     </button>
-                                                    <button onClick={() => handleDownloadPDF(f)} className="btn btn-ghost btn-sm btn-icon" disabled={downloadingId === f.id} title="PDF">
-                                                        {downloadingId === f.id
-                                                            ? <div className="spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
-                                                            : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                                                        }
-                                                    </button>
                                                     <button onClick={() => handleDelete(f)} className="btn btn-danger btn-sm btn-icon" title="Eliminar">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
                                                     </button>
@@ -910,8 +678,6 @@ export default function AdminFormularios() {
                     <PanelDetalle
                         f={selected}
                         onClose={() => setSelected(null)}
-                        onDownload={handleDownloadPDF}
-                        downloadingId={downloadingId}
                     />
                 )}
             </div>
