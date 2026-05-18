@@ -109,154 +109,151 @@ function ShHead({ color, title, note }) {
     );
 }
 
-function buildPDFHTML(f) {
+// Componente React que renderiza el formulario para PDF
+function FormularioPDFContent({ f }) {
     const d = f.datos || {};
     const tipo = f.tipo_formulario;
     const isGPAT = tipo === "gpat";
     const isJuridica = tipo === "persona_juridica";
     const tipoLabel = TIPO_LABEL[tipo] || tipo;
 
-    const row = (label, value) =>
-        value ? `<div style="margin-bottom:8px;">
-      <div style="font-size:10px;color:#8896a7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;">${label}</div>
-      <div style="font-size:13px;font-weight:600;color:#1a202c;">${value}</div>
-    </div>` : "";
+    const Row = ({ label, value }) => {
+        if (!value) return null;
+        return (
+            <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "10px", color: "#8896a7", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "1px" }}>{label}</div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a202c" }}>{value}</div>
+            </div>
+        );
+    };
 
-    const seccion = (title, color, content) => `
-    <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-      <div style="background:${color};padding:6px 13px;">
-        <span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">${title}</span>
-      </div>
-      <div style="padding:12px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">${content}</div>
-    </div>`;
-
-    let body = "";
-
-    if (isGPAT) {
-        body += seccion("Datos del solicitante", "#003366", `
-      ${row("Apellido y nombre", `${d.apellido || ""} ${d.nombre || ""}`)}
-      ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.fecha_nacimiento)}
-      ${row("CUIL/CUIT", d.cuil)}
-      ${row("Condición IVA", d.condicion_iva)}
-      ${row("Estado civil", d.estado_civil)}
-      ${row("Hijos", d.hijos)}
-      ${row("Profesión u ocupación", d.profesion)}
-    `);
-        body += seccion("Domicilio", "#1a4d88", `
-      ${row("Calle y número", `${d.calle || ""} ${d.numero_dom || ""}`)}
-      ${row("Piso / Depto", `${d.piso || ""} ${d.depto || ""}`)}
-      ${row("Localidad", d.localidad)}
-      ${row("Provincia", d.provincia)}
-      ${row("Cód. postal", d.cp)}
-      ${row("Tel. fijo", d.tel_fijo)}
-      ${row("Celular", d.celular)}
-      ${row("Email", d.email)}
-    `);
-        body += seccion("Ingresos y actividad — solicitante", "#0f6e56", `
-      ${row("Tipo de actividad", d.tipo_actividad)}
-      ${row("Empleador", d.empleador)}
-      ${row("Tel. laboral", d.tel_laboral)}
-      ${row("Ingreso mensual neto", d.ingreso_neto)}
-      ${row("Fecha de ingreso", d.fecha_ingreso)}
-      ${row("Antigüedad", d.antiguedad)}
-      ${row("Otra actividad", d.otra_actividad)}
-    `);
-        if (d.conyuge_nombre || d.conyuge_empleador) {
-            body += seccion("Datos del cónyuge — empleo", "#0f6e56", `
-        ${row("Apellido y nombre", d.conyuge_nombre)}
-        ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
-        ${row("CUIL/CUIT", d.conyuge_cuil)}
-        ${row("Tipo de actividad", d.conyuge_tipo_actividad)}
-        ${row("Empleador", d.conyuge_empleador)}
-        ${row("Ingreso mensual neto", d.conyuge_ingreso)}
-        ${row("Fecha de ingreso", d.conyuge_fecha_ingreso)}
-        ${row("Antigüedad", d.conyuge_antiguedad)}
-        ${row("Otra actividad", d.conyuge_otra_actividad)}
-      `);
-        }
-    } else if (isJuridica) {
-        body += seccion("Datos de la empresa", "#003366", `
-      ${row("Razón social", d.razon_social)}
-      ${row("CUIT", d.cuit)}
-      ${row("Domicilio", d.domicilio)}
-      ${row("Apoderado", d.apoderado)}
-    `);
-        body += seccion("Datos del apoderado", "#1a4d88", `
-      ${row("Apellido", d.apod_apellido)}
-      ${row("Nombre", d.apod_nombre)}
-      ${row("Documento", `${d.apod_tipo_doc || "DNI"} ${d.apod_nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.apod_fecha_nac)}
-      ${row("Teléfono", d.apod_tel)}
-      ${row("Email", d.apod_email)}
-      ${row("Código postal", d.apod_cp)}
-      ${row("CUIL/CUIT", d.apod_cuil)}
-      ${row("Estado civil", d.apod_estado_civil)}
-    `);
-    } else {
-        body += seccion("Datos personales", "#003366", `
-      ${row("Apellido y nombre", d.apellido_nombre)}
-      ${row("Tipo y N° documento", `${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`)}
-      ${row("Fecha de nacimiento", d.fecha_nacimiento)}
-      ${row("Estado civil", d.estado_civil)}
-      ${row("Profesión u oficio", d.profesion)}
-      ${row("Lugar de trabajo", d.lugar_trabajo)}
-      ${row("Tel. fijo", d.tel_fijo)}
-      ${row("Celular", d.celular)}
-      ${row("Domicilio real", d.domicilio)}
-      ${row("Email", d.email)}
-    `);
-        if (d.conyuge_nombre) {
-            body += seccion("Datos del cónyuge", "#1a4d88", `
-        ${row("Apellido y nombre", d.conyuge_nombre)}
-        ${row("Documento", `${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`)}
-      `);
-        }
-        if (d.onstar1_nombre || d.onstar2_nombre) {
-            body += seccion("OnStar — personas de referencia", "#444444", `
-        ${row("Dato 1 — nombre", d.onstar1_nombre)}
-        ${row("Dato 1 — teléfono", d.onstar1_tel)}
-        ${row("Dato 2 — nombre", d.onstar2_nombre)}
-        ${row("Dato 2 — teléfono", d.onstar2_tel)}
-      `);
-        }
-        const cedulas = [
-            d.cedula_sin_cargo_nombre && `Sin cargo: ${d.cedula_sin_cargo_nombre} — DNI: ${d.cedula_sin_cargo_dni || ""}`,
-            d.cedula_con_cargo_1_nombre && `Con cargo: ${d.cedula_con_cargo_1_nombre} — DNI: ${d.cedula_con_cargo_1_dni || ""}`,
-            d.cedula_con_cargo_2_nombre && `Con cargo: ${d.cedula_con_cargo_2_nombre} — DNI: ${d.cedula_con_cargo_2_dni || ""}`,
-        ].filter(Boolean);
-        if (cedulas.length) {
-            body += `
-        <div style="background:white;border:0.5px solid #e2e6ec;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-          <div style="background:#444;padding:6px 13px;"><span style="color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Solicitud de cédula azul</span></div>
-          <div style="padding:12px 13px;">${cedulas.map((c) => `<div style="font-size:12px;margin-bottom:5px;">${c}</div>`).join("")}</div>
-        </div>`;
-        }
-    }
-
-    return `
-    <div style="background:white;width:900px;font-family:sans-serif;padding:0;">
-      <div style="background:#003366;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0;">
-        <div style="color:white;font-size:30px;font-weight:700;letter-spacing:.06em;">AKAR</div>
-        <div style="color:rgba(255,255,255,.7);font-size:13px;text-align:right;">
-          <div style="font-size:16px;font-weight:700;color:white;">${tipoLabel} ${numStr(f.numero)}</div>
-          <div>${new Date(f.created_at).toLocaleDateString("es-AR")}</div>
-          <div style="margin-top:2px;">Vendedor: ${f.vendedor_nombre}</div>
+    const Sec = ({ title, color = "#003366", children }) => (
+        <div style={{ background: "white", border: "0.5px solid #e2e6ec", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
+            <div style={{ background: color, padding: "6px 13px" }}>
+                <span style={{ color: "white", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em" }}>{title}</span>
+            </div>
+            <div style={{ padding: "12px 13px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {children}
+            </div>
         </div>
-      </div>
-      <div style="border:1px solid #e2e6ec;border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;">
-        ${f.cotizacion_numero ? `
-        <div style="background:#f0f4fa;border:1px solid #d0daea;border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-          <div style="background:#003366;color:white;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:800;">${numStr(f.cotizacion_numero)}</div>
-          <div style="font-size:13px;color:#1a202c;">${f.cotizacion_descripcion || ""}</div>
-        </div>` : ""}
-        ${body}
-        <div style="border-top:0.5px solid #e2e6ec;margin-top:12px;padding-top:10px;display:flex;justify-content:space-between;font-size:11px;color:#8896a7;">
-          <span>Formulario ${numStr(f.numero)} · ${tipoLabel}</span>
-          <span>Enviado por ${f.vendedor_nombre} el ${new Date(f.created_at).toLocaleString("es-AR")}</span>
+    );
+
+    return (
+        <div style={{ background: "white", width: "900px", fontFamily: "sans-serif", padding: "0" }}>
+            <div style={{ background: "#003366", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: "12px 12px 0 0" }}>
+                <div style={{ color: "white", fontSize: "30px", fontWeight: "700", letterSpacing: ".06em" }}>AKAR</div>
+                <div style={{ color: "rgba(255,255,255,.7)", fontSize: "13px", textAlign: "right" }}>
+                    <div style={{ fontSize: "16px", fontWeight: "700", color: "white" }}>{tipoLabel} {numStr(f.numero)}</div>
+                    <div>{new Date(f.created_at).toLocaleDateString("es-AR")}</div>
+                    <div style={{ marginTop: "2px" }}>Vendedor: {f.vendedor_nombre}</div>
+                </div>
+            </div>
+            <div style={{ border: "1px solid #e2e6ec", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "16px 20px" }}>
+                {f.cotizacion_numero && (
+                    <div style={{ background: "#f0f4fa", border: "1px solid #d0daea", borderRadius: "8px", padding: "9px 14px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ background: "#003366", color: "white", borderRadius: "4px", padding: "2px 8px", fontSize: "12px", fontWeight: "800" }}>{numStr(f.cotizacion_numero)}</div>
+                        <div style={{ fontSize: "13px", color: "#1a202c" }}>{f.cotizacion_descripcion || ""}</div>
+                    </div>
+                )}
+
+                {isGPAT && (
+                    <>
+                        <Sec title="Datos del solicitante">
+                            <Row label="Apellido y nombre" value={`${d.apellido || ""} ${d.nombre || ""}`} />
+                            <Row label="Tipo y N° documento" value={`${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`} />
+                            <Row label="Fecha de nacimiento" value={d.fecha_nacimiento} />
+                            <Row label="CUIL/CUIT" value={d.cuil} />
+                            <Row label="Condición IVA" value={d.condicion_iva} />
+                            <Row label="Estado civil" value={d.estado_civil} />
+                            <Row label="Hijos" value={d.hijos} />
+                            <Row label="Profesión u ocupación" value={d.profesion} />
+                        </Sec>
+                        <Sec title="Domicilio" color="#1a4d88">
+                            <Row label="Calle y número" value={`${d.calle || ""} ${d.numero_dom || ""}`} />
+                            <Row label="Piso / Depto" value={`${d.piso || ""} ${d.depto || ""}`} />
+                            <Row label="Localidad" value={d.localidad} />
+                            <Row label="Provincia" value={d.provincia} />
+                            <Row label="Cód. postal" value={d.cp} />
+                            <Row label="Tel. fijo" value={d.tel_fijo} />
+                            <Row label="Celular" value={d.celular} />
+                            <Row label="Email" value={d.email} />
+                        </Sec>
+                        <Sec title="Ingresos y actividad — solicitante" color="#0f6e56">
+                            <Row label="Tipo de actividad" value={d.tipo_actividad} />
+                            <Row label="Empleador" value={d.empleador} />
+                            <Row label="Tel. laboral" value={d.tel_laboral} />
+                            <Row label="Ingreso mensual neto" value={d.ingreso_neto} />
+                            <Row label="Fecha de ingreso" value={d.fecha_ingreso} />
+                            <Row label="Antigüedad" value={d.antiguedad} />
+                            <Row label="Otra actividad" value={d.otra_actividad} />
+                        </Sec>
+                        {(d.conyuge_nombre || d.conyuge_empleador) && (
+                            <Sec title="Datos del cónyuge — empleo" color="#0f6e56">
+                                <Row label="Apellido y nombre" value={d.conyuge_nombre} />
+                                <Row label="Documento" value={`${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`} />
+                                <Row label="CUIL/CUIT" value={d.conyuge_cuil} />
+                                <Row label="Tipo de actividad" value={d.conyuge_tipo_actividad} />
+                                <Row label="Empleador" value={d.conyuge_empleador} />
+                                <Row label="Ingreso mensual neto" value={d.conyuge_ingreso} />
+                                <Row label="Fecha de ingreso" value={d.conyuge_fecha_ingreso} />
+                                <Row label="Antigüedad" value={d.conyuge_antiguedad} />
+                            </Sec>
+                        )}
+                    </>
+                )}
+
+                {isJuridica && (
+                    <>
+                        <Sec title="Datos de la empresa">
+                            <Row label="Razón social" value={d.razon_social} />
+                            <Row label="CUIT" value={d.cuit} />
+                            <div style={{ gridColumn: "1/-1" }}><Row label="Domicilio" value={d.domicilio} /></div>
+                            <div style={{ gridColumn: "1/-1" }}><Row label="Apoderado" value={d.apoderado} /></div>
+                        </Sec>
+                        <Sec title="Datos del apoderado" color="#1a4d88">
+                            <Row label="Apellido" value={d.apod_apellido} />
+                            <Row label="Nombre" value={d.apod_nombre} />
+                            <Row label="Documento" value={`${d.apod_tipo_doc || "DNI"} ${d.apod_nro_doc || ""}`} />
+                            <Row label="Fecha de nacimiento" value={d.apod_fecha_nac} />
+                            <Row label="Teléfono" value={d.apod_tel} />
+                            <Row label="Email" value={d.apod_email} />
+                            <Row label="Código postal" value={d.apod_cp} />
+                            <Row label="CUIL/CUIT" value={d.apod_cuil} />
+                            <Row label="Estado civil" value={d.apod_estado_civil} />
+                        </Sec>
+                    </>
+                )}
+
+                {!isGPAT && !isJuridica && (
+                    <>
+                        <Sec title="Datos personales">
+                            <Row label="Apellido y nombre" value={d.apellido_nombre} />
+                            <Row label="Tipo y N° documento" value={`${d.tipo_doc || "DNI"} ${d.nro_doc || ""}`} />
+                            <Row label="Fecha de nacimiento" value={d.fecha_nacimiento} />
+                            <Row label="Estado civil" value={d.estado_civil} />
+                            <Row label="Profesión u oficio" value={d.profesion} />
+                            <Row label="Lugar de trabajo" value={d.lugar_trabajo} />
+                            <Row label="Tel. fijo" value={d.tel_fijo} />
+                            <Row label="Celular" value={d.celular} />
+                            <div style={{ gridColumn: "1/-1" }}><Row label="Domicilio real" value={d.domicilio} /></div>
+                            <div style={{ gridColumn: "1/-1" }}><Row label="Email" value={d.email} /></div>
+                        </Sec>
+                        {d.conyuge_nombre && (
+                            <Sec title="Datos del cónyuge" color="#1a4d88">
+                                <Row label="Apellido y nombre" value={d.conyuge_nombre} />
+                                <Row label="Documento" value={`${d.conyuge_tipo_doc || ""} ${d.conyuge_nro_doc || ""}`} />
+                            </Sec>
+                        )}
+                    </>
+                )}
+
+                <div style={{ borderTop: "0.5px solid #e2e6ec", marginTop: "12px", paddingTop: "10px", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#8896a7" }}>
+                    <span>Formulario {numStr(f.numero)} · {tipoLabel}</span>
+                    <span>Enviado por {f.vendedor_nombre} el {new Date(f.created_at).toLocaleString("es-AR")}</span>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>`;
+    );
 }
 
 function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
@@ -317,14 +314,6 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                             <SeccionDetalle title="Cónyuge" color="#1a4d88">
                                 <Fila label="Apellido y nombre" value={d.conyuge_nombre} />
                                 <Fila label="Documento" value={`${d.conyuge_tipo_doc || ''} ${d.conyuge_nro_doc || ''}`} />
-                            </SeccionDetalle>
-                        )}
-                        {(d.onstar1_nombre || d.onstar2_nombre) && (
-                            <SeccionDetalle title="OnStar" color="#444444">
-                                <Fila label="Dato 1" value={d.onstar1_nombre} />
-                                <Fila label="Teléfono" value={d.onstar1_tel} />
-                                <Fila label="Dato 2" value={d.onstar2_nombre} />
-                                <Fila label="Teléfono" value={d.onstar2_tel} />
                             </SeccionDetalle>
                         )}
                     </>
@@ -388,7 +377,6 @@ function PanelDetalle({ f, onClose, onDownload, downloadingId }) {
                                 <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '6px 9px', background: '#f8f9fb', borderRadius: '6px', border: '0.5px solid #e2e6ec', textDecoration: 'none', marginBottom: '5px' }}>
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#003366" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                                     <span style={{ fontSize: '12px', color: '#003366', fontWeight: '500', flex: 1 }}>{name}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8896a7" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                                 </a>
                             )
                         })}
@@ -414,6 +402,7 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
             || (fields.apellido && fields.nombre ? `${fields.apellido}, ${fields.nombre}` : '')
             || fields.razon_social || ''
         if (!nombre) { setError('El nombre / razón social es requerido'); return }
+        if (tipo === 'hoja_datos' && !fields.lugar_trabajo) { setError('El lugar de trabajo es requerido'); return }
         setSaving(true)
         setError('')
         try {
@@ -519,27 +508,6 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
                                             <input className="form-input" value={fields.conyuge_nro_doc || ''} onChange={e => set('conyuge_nro_doc', e.target.value)} />
                                         </div>
                                     </Campo>
-                                </div>
-                            </div>
-                            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', overflow: 'hidden' }}>
-                                <ShHead color="#444444" title="OnStar — personas de referencia" />
-                                <div style={{ padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    <Campo label="Dato 1 — apellido y nombre"><input className="form-input" value={fields.onstar1_nombre || ''} onChange={e => set('onstar1_nombre', e.target.value)} /></Campo>
-                                    <Campo label="Teléfono"><input className="form-input" value={fields.onstar1_tel || ''} onChange={e => set('onstar1_tel', e.target.value)} /></Campo>
-                                    <Campo label="Dato 2 — apellido y nombre"><input className="form-input" value={fields.onstar2_nombre || ''} onChange={e => set('onstar2_nombre', e.target.value)} /></Campo>
-                                    <Campo label="Teléfono"><input className="form-input" value={fields.onstar2_tel || ''} onChange={e => set('onstar2_tel', e.target.value)} /></Campo>
-                                </div>
-                            </div>
-                            <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '10px', overflow: 'hidden' }}>
-                                <ShHead color="#444444" title="Solicitud de cédula azul" />
-                                <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {[{ key: 'cedula_sin_cargo', label: 'Sin cargo' }, { key: 'cedula_con_cargo_1', label: 'Con cargo' }, { key: 'cedula_con_cargo_2', label: 'Con cargo' }].map(({ key, label }) => (
-                                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 120px', gap: '8px', alignItems: 'end' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#8896a7', paddingBottom: '8px' }}>{label}</div>
-                                            <Campo label="Apellido y nombre"><input className="form-input" value={fields[`${key}_nombre`] || ''} onChange={e => set(`${key}_nombre`, e.target.value)} /></Campo>
-                                            <Campo label="DNI"><input className="form-input" value={fields[`${key}_dni`] || ''} onChange={e => set(`${key}_dni`, e.target.value)} /></Campo>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         </>
@@ -700,6 +668,8 @@ export default function AdminFormularios() {
     const [downloadingId, setDownloadingId] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [cotizaciones, setCotizaciones] = useState([])
+    const [pdfFormulario, setPdfFormulario] = useState(null)
+    const pdfRef = useState(null)
 
     async function load() {
         const [{ data: f }, { data: v }, { data: c }] = await Promise.all([
@@ -731,28 +701,32 @@ export default function AdminFormularios() {
     async function handleDownloadPDF(f) {
         setDownloadingId(f.id)
         try {
-            const html = buildPDFHTML(f)
-            const iframe = document.createElement('iframe')
-            iframe.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:1200px;opacity:0;pointer-events:none;border:none;'
-            document.body.appendChild(iframe)
-            iframe.contentDocument.open()
-            iframe.contentDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}</style></head><body style="background:white;padding:0;">${html}</body></html>`)
-            iframe.contentDocument.close()
-            await new Promise(r => setTimeout(r, 600))
-            const el = iframe.contentDocument.body.firstChild
+            // Renderizar el componente React en un div oculto en el DOM principal
+            const container = document.createElement('div')
+            container.style.cssText = 'position:fixed;left:-9999px;top:0;width:960px;background:white;z-index:-1;'
+            document.body.appendChild(container)
+
+            // Usar ReactDOM para renderizar el componente directamente en el DOM
+            const { createRoot } = await import('react-dom/client')
             const { default: html2canvas } = await import('html2canvas')
             const { jsPDF } = await import('jspdf')
+
+            const root = createRoot(container)
+            root.render(<FormularioPDFContent f={f} />)
+
+            // Esperar a que React renderice
+            await new Promise(r => setTimeout(r, 400))
+
+            const el = container.firstChild
             const canvas = await html2canvas(el, {
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
-                windowWidth: 960,
-                scrollX: 0,
-                scrollY: 0,
-                foreignObjectRendering: false,
-                logging: false,
             })
-            document.body.removeChild(iframe)
+
+            root.unmount()
+            document.body.removeChild(container)
+
             const pdf = new jsPDF('p', 'mm', 'a4')
             const pageW = pdf.internal.pageSize.getWidth()
             const pageH = pdf.internal.pageSize.getHeight()
