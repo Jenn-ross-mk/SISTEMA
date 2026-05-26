@@ -12,6 +12,8 @@ import AdminVehiculoForm from './pages/admin/AdminVehiculoForm'
 import AdminVendedores from './pages/admin/AdminVendedores'
 import AdminCotizaciones from './pages/admin/AdminCotizaciones'
 import AdminFormularios from './pages/admin/AdminFormularios'
+import AdminPlanAhorro from './pages/admin/AdminPlanAhorro'
+import AdminPlanAhorroForm from './pages/admin/AdminPlanAhorroForm'
 
 function PrivateRoute({ children, adminOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -45,6 +47,9 @@ function AppRoutes() {
         <Route path="vendedores" element={<AdminVendedores />} />
         <Route path="cotizaciones" element={<AdminCotizaciones />} />
         <Route path="formularios" element={<AdminFormularios />} />
+        <Route path="plan-ahorro" element={<AdminPlanAhorro />} />
+        <Route path="plan-ahorro/nuevo" element={<AdminPlanAhorroForm />} />
+        <Route path="plan-ahorro/editar/:id" element={<AdminPlanAhorroForm />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

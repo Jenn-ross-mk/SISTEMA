@@ -36,6 +36,12 @@ const NAV = [
       <line x1="8" y1="9" x2="10" y2="9"/>
     </svg>
   )},
+  { to: '/admin/plan-ahorro', label: 'Plan de Ahorro', icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 2a5 5 0 0 1 5 5c0 3-5 8-5 8S7 10 7 7a5 5 0 0 1 5-5z"/>
+      <circle cx="12" cy="7" r="2"/>
+    </svg>
+  )},
 ]
 
 export default function AdminLayout() {
@@ -98,12 +104,14 @@ export default function AdminLayout() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button onClick={() => navigate('/')} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
+            <button onClick={() => navigate('/')}
+              style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
               Ver cotizador
             </button>
-            <button onClick={signOut} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
+            <button onClick={signOut}
+              style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.15s' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
               Salir
