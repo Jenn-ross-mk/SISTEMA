@@ -5,6 +5,8 @@ import ClienteLayout from './pages/cliente/ClienteLayout'
 import VehiculosIndex from './pages/cliente/VehiculosIndex'
 import CotizadorVehiculo from './pages/cliente/CotizadorVehiculo'
 import FormulariosPage from './pages/cliente/FormulariosPage.jsx'
+import PlanAhorroIndex from './pages/cliente/PlanAhorroIndex'
+import CotizadorPlanAhorro from './pages/cliente/CotizadorPlanAhorro'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVehiculos from './pages/admin/AdminVehiculos'
@@ -37,6 +39,8 @@ function AppRoutes() {
         <Route index element={<VehiculosIndex />} />
         <Route path="vehiculo/:id" element={<CotizadorVehiculo />} />
         <Route path="formularios" element={<FormulariosPage />} />
+        <Route path="plan-ahorro" element={<PlanAhorroIndex />} />
+        <Route path="plan-ahorro/:id" element={<CotizadorPlanAhorro />} />
       </Route>
 
       <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>}>

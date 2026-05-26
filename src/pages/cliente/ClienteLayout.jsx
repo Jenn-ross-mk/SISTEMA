@@ -8,6 +8,7 @@ export default function ClienteLayout() {
   const navItems = [
     { to: '/', label: 'Cotizador', exact: true },
     { to: '/formularios', label: 'Formularios' },
+    { to: '/plan-ahorro', label: 'Plan de Ahorro' },
   ]
 
   return (
