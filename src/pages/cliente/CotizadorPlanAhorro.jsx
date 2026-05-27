@@ -54,7 +54,7 @@ export default function CotizadorPlanAhorro() {
                 vendedor_id: profile.id,
                 vendedor_nombre: profile.nombre,
                 cliente_nombre: cliente,
-                vehiculo_id: id,
+                vehiculo_id: null,
                 vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
                 provincia: profile.localidad || 'Sin localidad',
                 precio_base: vehiculo.valor_movil || 0,
