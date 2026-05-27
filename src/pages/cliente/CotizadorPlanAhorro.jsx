@@ -255,7 +255,7 @@ export default function CotizadorPlanAhorro() {
                         </div>
                     )}
 
-                    {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
+                    {/* ESQUEMA DE CUOTAS + PROMOCIONES + NOTAS */}
                     <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
                             <div>
@@ -276,25 +276,44 @@ export default function CotizadorPlanAhorro() {
                                     ))}
                                 </div>
                             </div>
-                            <div>
-                                <div style={stitle}>Promociones especiales</div>
-                                {promos.length === 0 ? (
-                                    <div style={{ fontSize: '12px', color: '#8896a7' }}>Sin promociones activas</div>
-                                ) : (
-                                    <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
-                                        {promos.map((p, i) => (
-                                            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 12px', borderBottom: i < promos.length - 1 ? '0.5px solid #dde2ea' : 'none', opacity: p.activa ? 1 : 0.35 }}>
-                                                <div style={{ width: '28px', height: '16px', background: p.activa ? '#003366' : '#c8d0da', borderRadius: '8px', position: 'relative', flexShrink: 0, marginTop: '2px' }}>
-                                                    <span style={{ position: 'absolute', width: '10px', height: '10px', background: 'white', borderRadius: '50%', top: '3px', left: p.activa ? '15px' : '3px' }} />
+
+                            {/* PROMOCIONES + NOTAS DEL VENDEDOR */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <div>
+                                    <div style={stitle}>Promociones especiales</div>
+                                    {promos.length === 0 ? (
+                                        <div style={{ fontSize: '12px', color: '#8896a7' }}>Sin promociones activas</div>
+                                    ) : (
+                                        <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
+                                            {promos.map((p, i) => (
+                                                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 12px', borderBottom: i < promos.length - 1 ? '0.5px solid #dde2ea' : 'none', opacity: p.activa ? 1 : 0.35 }}>
+                                                    <div style={{ width: '28px', height: '16px', background: p.activa ? '#003366' : '#c8d0da', borderRadius: '8px', position: 'relative', flexShrink: 0, marginTop: '2px' }}>
+                                                        <span style={{ position: 'absolute', width: '10px', height: '10px', background: 'white', borderRadius: '50%', top: '3px', left: p.activa ? '15px' : '3px' }} />
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{p.titulo}</div>
+                                                        {p.descripcion && <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '1px' }}>{p.descripcion}</div>}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{p.titulo}</div>
-                                                    {p.descripcion && <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '1px' }}>{p.descripcion}</div>}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* NOTAS DEL VENDEDOR */}
+                                <div>
+                                    <div style={stitle}>Notas adicionales</div>
+                                    <textarea
+                                        id="obs-vendedor"
+                                        value={observaciones}
+                                        onChange={e => setObservaciones(e.target.value)}
+                                        placeholder="Notas adicionales..."
+                                        style={{ width: '100%', minHeight: '80px', border: '0.5px solid #c4cad5', borderRadius: '7px', padding: '8px 9px', fontSize: '12px', fontFamily: 'Arial, sans-serif', resize: 'vertical', boxSizing: 'border-box', color: '#111827' }}
+                                    />
+                                    <div id="obs-vendedor-text" style={{ display: 'none', fontSize: '12px', color: '#4a5568', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                                        {observaciones}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
 
@@ -313,21 +332,6 @@ export default function CotizadorPlanAhorro() {
                             <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
                         </div>
                     )}
-
-                    {/* NOTAS DEL VENDEDOR — siempre visible */}
-                    <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
-                        <div style={stitle}>Notas adicionales</div>
-                        <textarea
-                            id="obs-vendedor"
-                            value={observaciones}
-                            onChange={e => setObservaciones(e.target.value)}
-                            placeholder="Notas adicionales para esta cotización..."
-                            style={{ width: '100%', minHeight: '80px', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '8px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
-                        />
-                        <div id="obs-vendedor-text" style={{ display: 'none', fontSize: '12px', color: '#4a5568', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-                            {observaciones}
-                        </div>
-                    </div>
 
                     {/* FOOTER */}
                     <div style={{ margin: '16px 20px', background: '#f5f7fa', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
