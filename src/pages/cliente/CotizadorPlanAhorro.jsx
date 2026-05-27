@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -50,6 +50,11 @@ export default function CotizadorPlanAhorro() {
       const html2pdf = (await import('html2pdf.js')).default
       const elemento = document.getElementById('cotizacion-pa-print')
       const nombreArchivo = `cotizacion-plan-ahorro-${vehiculo.marca}-${vehiculo.modelo}-${fechaHoy.replace(/\//g, '-')}.pdf`
+
+      // Ocultar inputs, mostrar textos planos
+      document.querySelectorAll('.pdf-input').forEach(el => el.style.display = 'none')
+      document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'block')
+
       await html2pdf()
         .set({
           margin: [8, 8, 8, 8],
@@ -60,9 +65,15 @@ export default function CotizadorPlanAhorro() {
         })
         .from(elemento)
         .save()
+
+      // Restaurar
+      document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
+      document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
     } catch (err) {
       console.error(err)
-      alert('Error al generar el PDF. Intentá de nuevo.')
+      alert('Error al generar el PDF.')
+      document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
+      document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
     }
     setGenerando(false)
   }
@@ -73,13 +84,8 @@ export default function CotizadorPlanAhorro() {
   return (
     <div style={{ padding: '20px 24px', maxWidth: '860px', margin: '0 auto' }}>
 
-      {/* Botón volver — no entra en el PDF */}
       <div style={{ marginBottom: '16px' }}>
-        <button
-          onClick={() => navigate('/plan-ahorro')}
-          className="btn btn-ghost btn-sm"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
+        <button onClick={() => navigate('/plan-ahorro')} className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
           </svg>
@@ -87,7 +93,6 @@ export default function CotizadorPlanAhorro() {
         </button>
       </div>
 
-      {/* ── ÁREA QUE SE CONVIERTE A PDF ── */}
       <div id="cotizacion-pa-print" style={{ fontFamily: 'Arial, sans-serif', background: 'white' }}>
 
         {/* HEADER */}
@@ -104,37 +109,28 @@ export default function CotizadorPlanAhorro() {
         <div style={{ border: '0.5px solid #dde2ea', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
 
           {/* VENDEDOR / CLIENTE */}
-          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
               <div style={lbl}>Vendedor</div>
               <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
             </div>
             <div>
               <div style={lbl}>Cliente</div>
-              {/* Input visible en pantalla, texto plano en PDF */}
               <input
-                id="input-cliente"
+                className="pdf-input"
                 style={{ width: '100%', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '5px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}
                 placeholder="Nombre del cliente"
                 value={cliente}
-                onChange={e => {
-                  setCliente(e.target.value)
-                  const span = document.getElementById('span-cliente')
-                  if (span) span.textContent = e.target.value || 'Nombre del cliente'
-                }}
+                onChange={e => setCliente(e.target.value)}
               />
-              {/* Este span reemplaza al input en el PDF */}
-              <span
-                id="span-cliente"
-                style={{ display: 'none', fontSize: '13px', fontWeight: '500', color: '#111827' }}
-              >
-                {cliente || 'Nombre del cliente'}
-              </span>
+              <div className="pdf-text" style={{ display: 'none', fontSize: '13px', fontWeight: '500', color: '#111827', padding: '5px 0' }}>
+                {cliente || '—'}
+              </div>
             </div>
           </div>
 
           {/* VEHÍCULO */}
-          <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #dde2ea', display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea', display: 'flex', gap: '16px', alignItems: 'center' }}>
             {vehiculo.imagen_url ? (
               <img src={vehiculo.imagen_url} alt="" style={{ width: '130px', height: '88px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
             ) : (
@@ -167,7 +163,7 @@ export default function CotizadorPlanAhorro() {
 
           {/* CUOTA 1 CON PROMO */}
           {plan && plan.cuota1_sin_promo > 0 && (
-            <div style={{ padding: '14px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', background: '#f5f7fa', borderBottom: '1px solid #dde2ea' }}>
               <div style={stitle}>Cuota 1 — Promoción vigente</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div style={{ background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px' }}>
@@ -189,7 +185,7 @@ export default function CotizadorPlanAhorro() {
 
           {/* CARACTERÍSTICAS */}
           {plan && (
-            <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
               <div style={stitle}>Características del plan</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
@@ -210,10 +206,9 @@ export default function CotizadorPlanAhorro() {
           )}
 
           {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
-          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
 
-              {/* Esquema */}
               <div>
                 <div style={stitle}>Esquema de cuotas</div>
                 <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
@@ -239,7 +234,6 @@ export default function CotizadorPlanAhorro() {
                 </div>
               </div>
 
-              {/* Promociones */}
               <div>
                 <div style={stitle}>Promociones especiales</div>
                 {promos.length === 0 ? (
@@ -262,7 +256,6 @@ export default function CotizadorPlanAhorro() {
               </div>
             </div>
 
-            {/* Notas ancho completo */}
             <div style={{ marginTop: '10px', borderLeft: '3px solid #003366', padding: '4px 10px', fontSize: '11px', color: '#6b7280' }}>
               <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza dependiendo del valor del vehículo al momento de emisión de las mismas.
             </div>
@@ -271,9 +264,8 @@ export default function CotizadorPlanAhorro() {
             </div>
           </div>
 
-          {/* OBSERVACIONES */}
           {plan?.observaciones ? (
-            <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
               <div style={stitle}>Observaciones</div>
               <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
             </div>
@@ -285,17 +277,7 @@ export default function CotizadorPlanAhorro() {
               Presupuesto válido por <strong style={{ color: '#111827' }}>10 días</strong>
             </span>
             <button
-              onClick={async () => {
-                // Antes de generar: mostrar span, ocultar input
-                const input = document.getElementById('input-cliente')
-                const span  = document.getElementById('span-cliente')
-                if (input) input.style.display = 'none'
-                if (span)  span.style.display  = 'inline'
-                await handleDescargarPDF()
-                // Restaurar después
-                if (input) input.style.display = ''
-                if (span)  span.style.display  = 'none'
-              }}
+              onClick={handleDescargarPDF}
               disabled={generando}
               style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: generando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: generando ? 0.7 : 1 }}
             >
