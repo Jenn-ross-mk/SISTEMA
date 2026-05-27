@@ -8,12 +8,12 @@ export default function CotizadorPlanAhorro() {
   const navigate = useNavigate()
   const { profile } = useAuth()
 
-  const [vehiculo, setVehiculo] = useState(null)
-  const [plan, setPlan]         = useState(null)
-  const [tramos, setTramos]     = useState([])
-  const [promos, setPromos]     = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [cliente, setCliente]   = useState('')
+  const [vehiculo, setVehiculo]   = useState(null)
+  const [plan, setPlan]           = useState(null)
+  const [tramos, setTramos]       = useState([])
+  const [promos, setPromos]       = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [cliente, setCliente]     = useState('')
   const [generando, setGenerando] = useState(false)
 
   useEffect(() => {
@@ -87,117 +87,95 @@ export default function CotizadorPlanAhorro() {
         </button>
       </div>
 
-      {/* ── COTIZACIÓN (esto es lo que se convierte a PDF) ── */}
       <div id="cotizacion-pa-print" style={{ fontFamily: 'Arial, sans-serif', background: 'white' }}>
 
         {/* HEADER */}
         <div style={{ background: '#003366', borderRadius: '10px 10px 0 0', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ fontWeight: '700', fontSize: '20px', color: 'white', letterSpacing: '0.06em' }}>AKAR</div>
-            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }} />
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Plan de Ahorro</div>
-            <span style={{ background: 'rgba(255,255,255,0.12)', border: '0.5px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Suscripción
-            </span>
+            <div style={{ fontWeight: '700', fontSize: '18px', color: 'white', letterSpacing: '0.06em' }}>AKAR</div>
+            <div style={{ width: '1px', height: '18px', background: 'rgba(255,255,255,0.2)' }} />
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Plan de Ahorro</div>
+            <span style={{ background: 'rgba(255,255,255,0.12)', border: '0.5px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase' }}>Suscripción</span>
           </div>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>{fechaHoy}</div>
         </div>
 
-        <div style={{ border: '0.5px solid #e2e6ec', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
+        <div style={{ border: '0.5px solid #dde2ea', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
 
           {/* VENDEDOR / CLIENTE */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #e2e6ec' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div>
-                <div style={lbl}>Vendedor</div>
-                <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
-              </div>
-              <div>
-                <div style={lbl}>Cliente</div>
-                <input
-                  style={{ width: '100%', border: '0.5px solid #c4cad5', borderRadius: '6px', padding: '5px 10px', fontSize: '13px', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}
-                  placeholder="Nombre del cliente"
-                  value={cliente}
-                  onChange={e => setCliente(e.target.value)}
-                />
-              </div>
+          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div>
+              <div style={lbl}>Vendedor</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
+            </div>
+            <div>
+              <div style={lbl}>Cliente</div>
+              <input
+                style={{ width: '100%', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '5px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}
+                placeholder="Nombre del cliente"
+                value={cliente}
+                onChange={e => setCliente(e.target.value)}
+              />
             </div>
           </div>
 
           {/* VEHÍCULO */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #e2e6ec' }}>
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              {vehiculo.imagen_url ? (
-                <img src={vehiculo.imagen_url} alt="" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: '120px', height: '80px', background: '#f0f2f5', borderRadius: '7px', border: '0.5px solid #e2e6ec', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c8d0da" strokeWidth="1.5">
-                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-                    <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-                  </svg>
-                </div>
-              )}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'inline-block', background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '5px', padding: '2px 8px', fontSize: '10px', fontWeight: '700', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
-                  Modelo Inicial
-                </div>
-                <div style={{ fontSize: '17px', fontWeight: '600', color: '#003366', lineHeight: 1.2, marginBottom: '5px' }}>
-                  {vehiculo.marca} {vehiculo.modelo} {vehiculo.version}
-                </div>
-                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                  <span style={badgeBlue}>{vehiculo.tipo_plan}</span>
-                  <span style={badgeBlue}>{vehiculo.plazo_cuotas} cuotas</span>
-                  <span style={badgeOrange}>Plan de Ahorro</span>
-                </div>
+          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea', display: 'flex', gap: '14px', alignItems: 'center' }}>
+            {vehiculo.imagen_url ? (
+              <img src={vehiculo.imagen_url} alt="" style={{ width: '110px', height: '74px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: '110px', height: '74px', background: '#f0f2f5', borderRadius: '7px', border: '0.5px solid #dde2ea', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c8d0da" strokeWidth="1.5">
+                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                  <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+                </svg>
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={lbl}>Valor móvil vigente</div>
-                <div style={{ fontSize: '17px', fontWeight: '600', color: '#003366' }}>{fmtPeso(vehiculo.valor_movil)}</div>
-                <div style={{ fontSize: '10px', color: '#8896a7', marginTop: '2px' }}>Actualizable mensualmente</div>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'inline-block', background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '5px', padding: '2px 7px', fontSize: '10px', fontWeight: '600', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                Modelo Inicial
               </div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: '#003366', marginBottom: '5px' }}>
+                {vehiculo.marca} {vehiculo.modelo} {vehiculo.version}
+              </div>
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                <span style={badgeBlue}>{vehiculo.tipo_plan}</span>
+                <span style={badgeBlue}>{vehiculo.plazo_cuotas} cuotas</span>
+                <span style={badgeOrange}>Plan de Ahorro</span>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={lbl}>Valor móvil vigente</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: '#003366' }}>{fmtPeso(vehiculo.valor_movil)}</div>
+              <div style={{ fontSize: '10px', color: '#8896a7', marginTop: '2px' }}>Actualizable mensualmente</div>
             </div>
           </div>
 
           {/* CUOTA 1 CON PROMO */}
           {plan && plan.cuota1_sin_promo > 0 && (
-            <div style={{ padding: '10px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #e2e6ec' }}>
+            <div style={{ padding: '10px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Cuota 1 — Promoción vigente</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 0.8fr auto 1fr', alignItems: 'center', gap: '0' }}>
-
-                {/* Sin promo */}
-                <div style={{ background: 'white', border: '0.5px solid #e2e6ec', borderRadius: '8px', padding: '10px 14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                <div style={{ background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px' }}>
                   <div style={lbl}>Cuota 1 sin promo</div>
-                  <div style={{ fontSize: '18px', fontWeight: '500', color: '#8896a7', textDecoration: 'line-through', marginTop: '2px' }}>{fmtPeso(plan.cuota1_sin_promo)}</div>
+                  <div style={{ fontSize: '20px', fontWeight: '500', color: '#8896a7', textDecoration: 'line-through', marginTop: '4px' }}>{fmtPeso(plan.cuota1_sin_promo)}</div>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#003366" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                </div>
-
-                {/* Bonificación — más pequeño */}
-                <div style={{ background: '#003366', borderRadius: '8px', padding: '10px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Bonificación</div>
-                  <div style={{ fontSize: '30px', fontWeight: '700', color: '#f0c040', lineHeight: 1 }}>{plan.bonificacion_pct}%</div>
+                <div style={{ background: '#003366', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Bonificación del</div>
+                  <div style={{ fontSize: '32px', fontWeight: '500', color: '#f0c040', lineHeight: 1 }}>{plan.bonificacion_pct}%</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Este mes</div>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#003366" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                <div style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '8px', padding: '12px 14px' }}>
+                  <div style={{ fontSize: '10px', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Cuota 1 con promo</div>
+                  <div style={{ fontSize: '20px', fontWeight: '500', color: '#003366', marginTop: '4px' }}>{fmtPeso(plan.cuota1_con_promo)}</div>
                 </div>
-
-                {/* Con promo */}
-                <div style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '8px', padding: '10px 14px' }}>
-                  <div style={{ fontSize: '10px', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Cuota 1 con promo</div>
-                  <div style={{ fontSize: '22px', fontWeight: '600', color: '#003366', marginTop: '2px' }}>{fmtPeso(plan.cuota1_con_promo)}</div>
-                </div>
-
               </div>
             </div>
           )}
 
           {/* CARACTERÍSTICAS */}
           {plan && (
-            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #e2e6ec' }}>
+            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Características del plan</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
@@ -210,7 +188,7 @@ export default function CotizadorPlanAhorro() {
                 ].map(({ label, value }) => value ? (
                   <div key={label}>
                     <div style={lbl}>{label}</div>
-                    <div style={{ fontSize: '12px', color: '#111827', border: '0.5px solid #e2e6ec', borderRadius: '5px', padding: '6px 10px', background: '#fafbfc' }}>{value}</div>
+                    <div style={{ fontSize: '12px', color: '#111827', border: '0.5px solid #dde2ea', borderRadius: '5px', padding: '5px 9px', background: '#fafbfc' }}>{value}</div>
                   </div>
                 ) : null)}
               </div>
@@ -218,55 +196,49 @@ export default function CotizadorPlanAhorro() {
           )}
 
           {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #e2e6ec' }}>
+          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
 
               {/* Esquema */}
               <div>
                 <div style={stitle}>Esquema de cuotas</div>
-                <div style={{ border: '0.5px solid #e2e6ec', borderRadius: '7px', overflow: 'hidden' }}>
+                <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', background: '#f5f7fa', padding: '5px 10px' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tramo</div>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota</div>
+                    <div style={{ fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase' }}>Tramo</div>
+                    <div style={{ fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase' }}>Cuota</div>
                   </div>
                   {tramos.map((t, i) => (
                     <div key={i} style={{
                       display: 'grid', gridTemplateColumns: '1.4fr 1fr',
                       background: t.es_promo ? '#E6F1FB' : 'white',
-                      borderBottom: i < tramos.length - 1 ? '0.5px solid #e2e6ec' : 'none',
+                      borderBottom: i < tramos.length - 1 ? '0.5px solid #dde2ea' : 'none',
                     }}>
                       <div style={{ padding: '6px 10px', fontSize: '12px', color: t.es_promo ? '#0C447C' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         {t.label}
-                        {t.es_promo && <span style={{ background: '#EAF3DE', color: '#27500A', fontSize: '9px', fontWeight: '600', padding: '1px 6px', borderRadius: '20px' }}>Promo</span>}
+                        {t.es_promo && (
+                          <span style={{ background: '#EAF3DE', color: '#27500A', fontSize: '9px', fontWeight: '600', padding: '1px 6px', borderRadius: '20px' }}>Promo</span>
+                        )}
                       </div>
                       <div style={{ padding: '6px 10px', fontSize: '12px', fontWeight: '600', color: '#003366' }}>{fmtPeso(t.monto)}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Notas en una sola línea cada una */}
-                <div style={{ marginTop: '7px', borderLeft: '3px solid #003366', padding: '4px 8px', fontSize: '11px', color: '#6b7280' }}>
-                  <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza según el valor del vehículo al momento de emisión.
-                </div>
-                <div style={{ marginTop: '5px', borderLeft: '3px solid #b45309', padding: '4px 8px', fontSize: '11px', color: '#6b7280' }}>
-                  <strong style={{ color: '#111827' }}>Gastos no incluidos:</strong> {plan?.gastos_texto}
-                </div>
               </div>
 
-              {/* Promociones — sin aviso de solo lectura */}
+              {/* Promociones */}
               <div>
                 <div style={stitle}>Promociones especiales</div>
                 {promos.length === 0 ? (
                   <div style={{ fontSize: '12px', color: '#8896a7' }}>Sin promociones activas</div>
                 ) : (
-                  <div style={{ border: '0.5px solid #e2e6ec', borderRadius: '7px', overflow: 'hidden' }}>
+                  <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
                     {promos.map((p, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 12px', borderBottom: i < promos.length - 1 ? '0.5px solid #e2e6ec' : 'none', opacity: p.activa ? 1 : 0.35 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 12px', borderBottom: i < promos.length - 1 ? '0.5px solid #dde2ea' : 'none', opacity: p.activa ? 1 : 0.35 }}>
                         <div style={{ width: '28px', height: '16px', background: p.activa ? '#003366' : '#c8d0da', borderRadius: '8px', position: 'relative', flexShrink: 0, marginTop: '2px' }}>
                           <span style={{ position: 'absolute', width: '10px', height: '10px', background: 'white', borderRadius: '50%', top: '3px', left: p.activa ? '15px' : '3px' }} />
                         </div>
                         <div>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827' }}>{p.titulo}</div>
+                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{p.titulo}</div>
                           {p.descripcion && <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '1px' }}>{p.descripcion}</div>}
                         </div>
                       </div>
@@ -275,11 +247,19 @@ export default function CotizadorPlanAhorro() {
                 )}
               </div>
             </div>
+
+            {/* Notas ancho completo */}
+            <div style={{ marginTop: '10px', borderLeft: '3px solid #003366', padding: '4px 10px', fontSize: '11px', color: '#6b7280' }}>
+              <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza dependiendo del valor del vehículo al momento de emisión de las mismas.
+            </div>
+            <div style={{ marginTop: '5px', borderLeft: '3px solid #b45309', padding: '4px 10px', fontSize: '11px', color: '#6b7280' }}>
+              <strong style={{ color: '#111827' }}>Gastos no incluidos en la cuota:</strong> Derecho de adjudicación (1,5% + IVA), flete y patentamiento (aprox. 10%).
+            </div>
           </div>
 
           {/* OBSERVACIONES */}
           {plan?.observaciones ? (
-            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #e2e6ec' }}>
+            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Observaciones</div>
               <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
             </div>
@@ -293,16 +273,16 @@ export default function CotizadorPlanAhorro() {
             <button
               onClick={handleDescargarPDF}
               disabled={generando}
-              style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '9px 20px', fontSize: '13px', fontWeight: '600', fontFamily: 'Arial, sans-serif', cursor: generando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: generando ? 0.7 : 1 }}
+              style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: generando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: generando ? 0.7 : 1 }}
             >
               {generando ? (
                 <>
-                  <div style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   Generando...
                 </>
               ) : (
                 <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                   Descargar PDF
@@ -313,19 +293,12 @@ export default function CotizadorPlanAhorro() {
 
         </div>
       </div>
-
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
 
-const lbl = {
-  fontSize: '10px', fontWeight: '600', color: '#8896a7',
-  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px',
-}
-const stitle = {
-  fontSize: '11px', fontWeight: '700', color: '#003366',
-  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px',
-}
-const badgeBlue   = { background: '#E6F1FB', color: '#0C447C', fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px' }
-const badgeOrange = { background: '#FFF3E0', color: '#7C4000', fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px' }
+const lbl = { fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }
+const stitle = { fontSize: '11px', fontWeight: '500', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }
+const badgeBlue   = { background: '#E6F1FB', color: '#0C447C', fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px' }
+const badgeOrange = { background: '#FFF3E0', color: '#7C4000', fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px' }
