@@ -144,7 +144,7 @@ export default function CotizadorPlanAhorro() {
                 {/* HEADER */}
                 <div style={{ background: '#003366', borderRadius: '10px 10px 0 0', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ fontWeight: '700', fontSize: '18px', color: 'white', letterSpacing: '0.06em' }}>AKAR</div>
+                        <img src="/logo-akar.png" alt="Akar Automotores" style={{ height: '40px' }} />
                         <div style={{ width: '1px', height: '18px', background: 'rgba(255,255,255,0.2)' }} />
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Plan de Ahorro</div>
                         <span style={{ background: 'rgba(255,255,255,0.12)', border: '0.5px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase' }}>Suscripción</span>
