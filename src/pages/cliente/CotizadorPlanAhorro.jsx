@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -51,7 +51,6 @@ export default function CotizadorPlanAhorro() {
       const elemento = document.getElementById('cotizacion-pa-print')
       const nombreArchivo = `cotizacion-plan-ahorro-${vehiculo.marca}-${vehiculo.modelo}-${fechaHoy.replace(/\//g, '-')}.pdf`
 
-      // Ocultar inputs, mostrar textos planos
       document.querySelectorAll('.pdf-input').forEach(el => el.style.display = 'none')
       document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'block')
 
@@ -66,7 +65,6 @@ export default function CotizadorPlanAhorro() {
         .from(elemento)
         .save()
 
-      // Restaurar
       document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
       document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
     } catch (err) {
@@ -109,7 +107,7 @@ export default function CotizadorPlanAhorro() {
         <div style={{ border: '0.5px solid #dde2ea', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
 
           {/* VENDEDOR / CLIENTE */}
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
               <div style={lbl}>Vendedor</div>
               <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
@@ -130,7 +128,7 @@ export default function CotizadorPlanAhorro() {
           </div>
 
           {/* VEHÍCULO */}
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea', display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea', display: 'flex', gap: '16px', alignItems: 'center' }}>
             {vehiculo.imagen_url ? (
               <img src={vehiculo.imagen_url} alt="" style={{ width: '130px', height: '88px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
             ) : (
@@ -163,7 +161,7 @@ export default function CotizadorPlanAhorro() {
 
           {/* CUOTA 1 CON PROMO */}
           {plan && plan.cuota1_sin_promo > 0 && (
-            <div style={{ padding: '12px 20px', background: '#f5f7fa', borderBottom: '1px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Cuota 1 — Promoción vigente</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div style={{ background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px' }}>
@@ -185,7 +183,7 @@ export default function CotizadorPlanAhorro() {
 
           {/* CARACTERÍSTICAS */}
           {plan && (
-            <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Características del plan</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
@@ -206,7 +204,7 @@ export default function CotizadorPlanAhorro() {
           )}
 
           {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
 
               <div>
@@ -256,23 +254,25 @@ export default function CotizadorPlanAhorro() {
               </div>
             </div>
 
-            <div style={{ marginTop: '10px', borderLeft: '3px solid #003366', padding: '4px 10px', fontSize: '11px', color: '#6b7280' }}>
+            {/* NOTAS — más espacio arriba */}
+            <div style={{ marginTop: '20px', borderLeft: '3px solid #003366', padding: '5px 10px', fontSize: '11px', color: '#6b7280' }}>
               <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza dependiendo del valor del vehículo al momento de emisión de las mismas.
             </div>
-            <div style={{ marginTop: '5px', borderLeft: '3px solid #b45309', padding: '4px 10px', fontSize: '11px', color: '#6b7280' }}>
+            <div style={{ marginTop: '10px', borderLeft: '3px solid #b45309', padding: '5px 10px', fontSize: '11px', color: '#6b7280' }}>
               <strong style={{ color: '#111827' }}>Gastos no incluidos en la cuota:</strong> Derecho de adjudicación (1,5% + IVA), flete y patentamiento (aprox. 10%).
             </div>
           </div>
 
+          {/* OBSERVACIONES */}
           {plan?.observaciones ? (
-            <div style={{ padding: '12px 20px', borderBottom: '1px solid #dde2ea' }}>
+            <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Observaciones</div>
               <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
             </div>
           ) : null}
 
           {/* FOOTER */}
-          <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ margin: '16px 20px 16px 20px', background: '#f5f7fa', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: '#8896a7' }}>
               Presupuesto válido por <strong style={{ color: '#111827' }}>10 días</strong>
             </span>
