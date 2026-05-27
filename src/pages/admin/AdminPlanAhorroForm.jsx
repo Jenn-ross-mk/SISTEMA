@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 const MARCAS = ['CHEVROLET', 'VOLKSWAGEN', 'FORD', 'FIAT', 'RENAULT', 'PEUGEOT', 'CITROËN', 'TOYOTA', 'HONDA']
-const TIPOS_PLAN = ['70/30', '50/50', '60/40', '80/20']
 
 const EMPTY_TRAMO = { label: '', monto: '', es_promo: false, orden: 0 }
 const EMPTY_PROMO = { titulo: '', descripcion: '', activa: false, orden: 0 }
@@ -120,7 +119,7 @@ export default function AdminPlanAhorroForm() {
             showToast('Ingresá el valor móvil', 'error'); return
         }
         if (!veh.tipo_plan) {
-            showToast('Seleccioná el tipo de plan', 'error'); return
+            showToast('Ingresá el tipo de plan', 'error'); return
         }
         setSaving(true)
         try {
@@ -128,7 +127,7 @@ export default function AdminPlanAhorroForm() {
             const vehData = {
                 marca: veh.marca.trim(), modelo: veh.modelo.trim(), version: veh.version.trim(),
                 imagen_url: veh.imagen_url || null, valor_movil: parseFloat(veh.valor_movil) || 0,
-                tipo_plan: veh.tipo_plan, plazo_cuotas: parseInt(veh.plazo_cuotas) || 84,
+                tipo_plan: veh.tipo_plan.trim(), plazo_cuotas: parseInt(veh.plazo_cuotas) || 84,
                 activo: veh.activo, orden: parseInt(veh.orden) || 0,
                 updated_at: new Date().toISOString(),
             }
@@ -218,6 +217,7 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </div>
 
+            {/* SECCIÓN 1: Datos del vehículo */}
             <Section title="Datos del vehículo">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Marca">
@@ -238,10 +238,7 @@ export default function AdminPlanAhorroForm() {
                         <input className="form-input" type="number" value={veh.valor_movil} onChange={e => setV('valor_movil', e.target.value)} placeholder="35116900" />
                     </FormGroup>
                     <FormGroup label="Tipo de plan *">
-                        <select className="form-select" value={veh.tipo_plan} onChange={e => setV('tipo_plan', e.target.value)}>
-                            <option value="">Seleccionar...</option>
-                            {TIPOS_PLAN.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
+                        <input className="form-input" value={veh.tipo_plan} onChange={e => setV('tipo_plan', e.target.value)} placeholder="Ej: 70/30" />
                     </FormGroup>
                     <FormGroup label="Plazo (cuotas)">
                         <input className="form-input" type="number" value={veh.plazo_cuotas} onChange={e => setV('plazo_cuotas', e.target.value)} placeholder="84" />
@@ -282,6 +279,7 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
+            {/* SECCIÓN 2: Características del plan */}
             <Section title="Características del plan">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Sistema / nombre del plan">
@@ -299,6 +297,7 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
+            {/* SECCIÓN 3: Cuota 1 */}
             <Section title="Cuota 1 — Promoción vigente">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Cuota 1 sin promo ($)">
@@ -316,6 +315,7 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
+            {/* SECCIÓN 4: Esquema de cuotas */}
             <Section
                 title="Esquema de cuotas"
                 action={<button className="btn btn-ghost btn-sm" onClick={addTramo}>+ Agregar tramo</button>}
@@ -348,6 +348,7 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
+            {/* SECCIÓN 5: Promociones especiales + Observaciones */}
             <Section
                 title="Promociones especiales"
                 subtitle="Solo el administrador puede activarlas. Los vendedores las ven en modo solo lectura."
@@ -386,20 +387,22 @@ export default function AdminPlanAhorroForm() {
                         </div>
                     </div>
                 ))}
+
+                {/* Observaciones dentro del mismo bloque */}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f0f2f5' }}>
+                    <FormGroup label="Observaciones (visible al vendedor)">
+                        <textarea
+                            className="form-textarea"
+                            value={plan.observaciones}
+                            onChange={e => setP('observaciones', e.target.value)}
+                            placeholder="Condiciones adicionales, aclaraciones especiales..."
+                            rows={3}
+                        />
+                    </FormGroup>
+                </div>
             </Section>
 
-            <Section title="Observaciones">
-                <FormGroup label="Notas para la cotización (visible al vendedor)">
-                    <textarea
-                        className="form-textarea"
-                        value={plan.observaciones}
-                        onChange={e => setP('observaciones', e.target.value)}
-                        placeholder="Condiciones adicionales, aclaraciones especiales..."
-                        rows={3}
-                    />
-                </FormGroup>
-            </Section>
-
+            {/* Footer */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
                 <button className="btn btn-ghost" onClick={() => navigate('/admin/plan-ahorro')}>
                     Cancelar

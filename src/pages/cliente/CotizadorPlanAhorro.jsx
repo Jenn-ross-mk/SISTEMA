@@ -265,6 +265,7 @@ export default function CotizadorPlanAhorro() {
                                     ))}
                                 </div>
                             </div>
+
                             <div>
                                 <div style={stitle}>Promociones especiales</div>
                                 {promos.length === 0 ? (
@@ -286,6 +287,7 @@ export default function CotizadorPlanAhorro() {
                                 )}
                             </div>
                         </div>
+
                         <div style={{ marginTop: '20px', borderLeft: '3px solid #003366', padding: '5px 10px', fontSize: '11px', color: '#6b7280' }}>
                             <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza dependiendo del valor del vehículo al momento de emisión de las mismas.
                         </div>
@@ -295,12 +297,12 @@ export default function CotizadorPlanAhorro() {
                     </div>
 
                     {/* OBSERVACIONES */}
-                    {plan?.observaciones ? (
+                    {plan?.observaciones && (
                         <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                             <div style={stitle}>Observaciones</div>
                             <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
                         </div>
-                    ) : null}
+                    )}
 
                     {/* FOOTER */}
                     <div style={{ margin: '16px 20px', background: '#f5f7fa', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
