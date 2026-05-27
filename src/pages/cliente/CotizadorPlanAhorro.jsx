@@ -58,11 +58,11 @@ export default function CotizadorPlanAhorro() {
                 vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
                 provincia: profile.localidad || 'Sin localidad',
                 precio_base: vehiculo.valor_movil || 0,
-                plan_nombre: plan?.sistema || 'Plan de Ahorro',
+                plan_nombre: `Plan de Ahorro - ${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
                 valor_cuota: plan?.cuota1_con_promo || 0,
                 saldo_efectivo: plan?.cuota1_con_promo || 0,
                 monto_financiado: 0,
-                cuotas: 0,
+                cuotas: vehiculo.plazo_cuotas || 0,
                 quebranto: 0,
                 sellado: 0,
                 entrega_usado: 0,
@@ -205,32 +205,19 @@ export default function CotizadorPlanAhorro() {
                         <div style={{ padding: '12px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
                             <div style={stitle}>Cuota 1 — Promoción vigente</div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-
-                                <div style={{
-                                    background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                                }}>
+                                <div style={{ background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                                     <div style={{ fontSize: '10px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Cuota 1 sin promo</div>
                                     <div style={{ fontSize: '20px', fontWeight: '500', color: '#8896a7', textDecoration: 'line-through' }}>{fmtPeso(plan.cuota1_sin_promo)}</div>
                                 </div>
-
-                                <div style={{
-                                    background: '#003366', borderRadius: '8px', padding: '12px 14px',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                                }}>
+                                <div style={{ background: '#003366', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Bonificación del</div>
                                     <div style={{ fontSize: '32px', fontWeight: '500', color: '#f0c040', lineHeight: 1 }}>{plan.bonificacion_pct}%</div>
                                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>Este mes</div>
                                 </div>
-
-                                <div style={{
-                                    background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '8px', padding: '12px 14px',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                                }}>
+                                <div style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                                     <div style={{ fontSize: '10px', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Cuota 1 con promo</div>
                                     <div style={{ fontSize: '20px', fontWeight: '500', color: '#003366' }}>{fmtPeso(plan.cuota1_con_promo)}</div>
                                 </div>
-
                             </div>
                         </div>
                     )}
@@ -260,7 +247,6 @@ export default function CotizadorPlanAhorro() {
                     {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
                     <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
-
                             <div>
                                 <div style={stitle}>Esquema de cuotas</div>
                                 <div style={{ border: '0.5px solid #dde2ea', borderRadius: '7px', overflow: 'hidden' }}>
@@ -269,23 +255,16 @@ export default function CotizadorPlanAhorro() {
                                         <div style={{ fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase' }}>Cuota</div>
                                     </div>
                                     {tramos.map((t, i) => (
-                                        <div key={i} style={{
-                                            display: 'grid', gridTemplateColumns: '1.4fr 1fr',
-                                            background: t.es_promo ? '#E6F1FB' : 'white',
-                                            borderBottom: i < tramos.length - 1 ? '0.5px solid #dde2ea' : 'none',
-                                        }}>
+                                        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', background: t.es_promo ? '#E6F1FB' : 'white', borderBottom: i < tramos.length - 1 ? '0.5px solid #dde2ea' : 'none' }}>
                                             <div style={{ padding: '6px 10px', fontSize: '12px', color: t.es_promo ? '#0C447C' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                                 {t.label}
-                                                {t.es_promo && (
-                                                    <span style={{ background: '#EAF3DE', color: '#27500A', fontSize: '9px', fontWeight: '600', padding: '1px 6px', borderRadius: '20px' }}>Promo</span>
-                                                )}
+                                                {t.es_promo && <span style={{ background: '#EAF3DE', color: '#27500A', fontSize: '9px', fontWeight: '600', padding: '1px 6px', borderRadius: '20px' }}>Promo</span>}
                                             </div>
                                             <div style={{ padding: '6px 10px', fontSize: '12px', fontWeight: '600', color: '#003366' }}>{fmtPeso(t.monto)}</div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-
                             <div>
                                 <div style={stitle}>Promociones especiales</div>
                                 {promos.length === 0 ? (
@@ -307,7 +286,6 @@ export default function CotizadorPlanAhorro() {
                                 )}
                             </div>
                         </div>
-
                         <div style={{ marginTop: '20px', borderLeft: '3px solid #003366', padding: '5px 10px', fontSize: '11px', color: '#6b7280' }}>
                             <strong style={{ color: '#111827' }}>Valor de cuotas:</strong> se actualiza dependiendo del valor del vehículo al momento de emisión de las mismas.
                         </div>
@@ -335,22 +313,11 @@ export default function CotizadorPlanAhorro() {
                             style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: (generando || saving) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: (generando || saving) ? 0.7 : 1 }}
                         >
                             {saving ? (
-                                <>
-                                    <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                                    Guardando...
-                                </>
+                                <><div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />Guardando...</>
                             ) : generando ? (
-                                <>
-                                    <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                                    Generando...
-                                </>
+                                <><div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />Generando...</>
                             ) : (
-                                <>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                    Descargar PDF
-                                </>
+                                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Descargar PDF</>
                             )}
                         </button>
                     </div>
