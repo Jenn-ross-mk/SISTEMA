@@ -46,28 +46,24 @@ export default function CotizadorPlanAhorro() {
 
     async function handleGuardar() {
         if (!cliente || !profile) return
-        try {
-            await supabase.from('cotizaciones').insert({
-                vendedor_id: profile.id,
-                vendedor_nombre: profile.nombre,
-                cliente_nombre: cliente,
-                vehiculo_id: id,
-                vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
-                provincia: null,
-                precio_base: vehiculo.valor_movil || 0,
-                plan_nombre: plan?.sistema || 'Plan de Ahorro',
-                valor_cuota: plan?.cuota1_con_promo || 0,
-                saldo_efectivo: plan?.cuota1_con_promo || 0,
-                monto_financiado: 0,
-                cuotas: 0,
-                quebranto: 0,
-                sellado: 0,
-                entrega_usado: 0,
-                descuento: plan?.bonificacion_pct || 0,
-            })
-        } catch (err) {
-            console.error('Error al guardar cotización:', err)
-        }
+        await supabase.from('cotizaciones').insert({
+            vendedor_id: profile.id,
+            vendedor_nombre: profile.nombre,
+            cliente_nombre: cliente,
+            vehiculo_id: id,
+            vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
+            provincia: profile.localidad || 'Sin localidad',
+            precio_base: vehiculo.valor_movil || 0,
+            plan_nombre: plan?.sistema || 'Plan de Ahorro',
+            valor_cuota: plan?.cuota1_con_promo || 0,
+            saldo_efectivo: plan?.cuota1_con_promo || 0,
+            monto_financiado: 0,
+            cuotas: 0,
+            quebranto: 0,
+            sellado: 0,
+            entrega_usado: 0,
+            descuento: plan?.bonificacion_pct || 0,
+        })
     }
 
     async function handleDescargarPDF() {
@@ -101,7 +97,6 @@ export default function CotizadorPlanAhorro() {
             document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
         } catch (err) {
             console.error(err)
-            alert('Error al generar el PDF.')
             document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
             document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
         }
@@ -139,10 +134,14 @@ export default function CotizadorPlanAhorro() {
                 <div style={{ border: '0.5px solid #dde2ea', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
 
                     {/* VENDEDOR / CLIENTE */}
-                    <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                         <div>
                             <div style={lbl}>Vendedor</div>
                             <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
+                        </div>
+                        <div>
+                            <div style={lbl}>Localidad</div>
+                            <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.localidad || '—'}</div>
                         </div>
                         <div>
                             <div style={lbl}>Cliente</div>
