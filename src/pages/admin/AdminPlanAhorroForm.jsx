@@ -21,7 +21,7 @@ export default function AdminPlanAhorroForm() {
 
     const [veh, setVeh] = useState({
         marca: 'CHEVROLET', modelo: '', version: '',
-        imagen_url: '', valor_movil: '', tipo_plan: '70/30',
+        imagen_url: '', valor_movil: '', tipo_plan: '',
         plazo_cuotas: 84, activo: true, orden: 0,
     })
 
@@ -41,7 +41,6 @@ export default function AdminPlanAhorroForm() {
 
     const [promos, setPromos] = useState([])
 
-    // ── Carga en modo edición ──
     useEffect(() => {
         if (!isEdit) return
         async function fetchData() {
@@ -50,7 +49,7 @@ export default function AdminPlanAhorroForm() {
             setVeh({
                 marca: v.marca, modelo: v.modelo, version: v.version,
                 imagen_url: v.imagen_url || '', valor_movil: v.valor_movil,
-                tipo_plan: v.tipo_plan, plazo_cuotas: v.plazo_cuotas,
+                tipo_plan: v.tipo_plan || '', plazo_cuotas: v.plazo_cuotas,
                 activo: v.activo, orden: v.orden,
             })
 
@@ -120,9 +119,11 @@ export default function AdminPlanAhorroForm() {
         if (!veh.valor_movil) {
             showToast('Ingresá el valor móvil', 'error'); return
         }
+        if (!veh.tipo_plan) {
+            showToast('Seleccioná el tipo de plan', 'error'); return
+        }
         setSaving(true)
         try {
-            // 1. Vehículo
             let vehiculoId = id
             const vehData = {
                 marca: veh.marca.trim(), modelo: veh.modelo.trim(), version: veh.version.trim(),
@@ -139,7 +140,6 @@ export default function AdminPlanAhorroForm() {
                 vehiculoId = nv.id
             }
 
-            // 2. Plan
             const planData = {
                 vehiculo_id: vehiculoId,
                 sistema: plan.sistema.trim(),
@@ -163,7 +163,6 @@ export default function AdminPlanAhorroForm() {
                 setPlanId(np.id)
             }
 
-            // 3. Tramos: borrar y re-insertar
             await supabase.from('pa_cuota_tramos').delete().eq('plan_id', currentPlanId)
             const tramosData = tramos
                 .filter(t => t.label)
@@ -176,7 +175,6 @@ export default function AdminPlanAhorroForm() {
                 }))
             if (tramosData.length > 0) await supabase.from('pa_cuota_tramos').insert(tramosData)
 
-            // 4. Promociones: borrar y re-insertar
             await supabase.from('pa_promociones').delete().eq('vehiculo_id', vehiculoId)
             const promosData = promos
                 .filter(p => p.titulo)
@@ -204,7 +202,6 @@ export default function AdminPlanAhorroForm() {
         <div style={{ padding: '32px', maxWidth: '860px' }}>
             {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
 
-            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '28px' }}>
                 <button onClick={() => navigate('/admin/plan-ahorro')} className="btn btn-ghost btn-sm btn-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -221,7 +218,6 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </div>
 
-            {/* SECCIÓN 1: Datos del vehículo */}
             <Section title="Datos del vehículo">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Marca">
@@ -241,9 +237,10 @@ export default function AdminPlanAhorroForm() {
                     <FormGroup label="Valor móvil vigente ($)">
                         <input className="form-input" type="number" value={veh.valor_movil} onChange={e => setV('valor_movil', e.target.value)} placeholder="35116900" />
                     </FormGroup>
-                    <FormGroup label="Tipo de plan">
+                    <FormGroup label="Tipo de plan *">
                         <select className="form-select" value={veh.tipo_plan} onChange={e => setV('tipo_plan', e.target.value)}>
-                            {TIPOS_PLAN.map(t => <option key={t}>{t}</option>)}
+                            <option value="">Seleccionar...</option>
+                            {TIPOS_PLAN.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </FormGroup>
                     <FormGroup label="Plazo (cuotas)">
@@ -285,7 +282,6 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
-            {/* SECCIÓN 2: Características del plan */}
             <Section title="Características del plan">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Sistema / nombre del plan">
@@ -303,7 +299,6 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
-            {/* SECCIÓN 3: Cuota 1 */}
             <Section title="Cuota 1 — Promoción vigente">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <FormGroup label="Cuota 1 sin promo ($)">
@@ -321,7 +316,6 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
-            {/* SECCIÓN 4: Esquema de cuotas */}
             <Section
                 title="Esquema de cuotas"
                 action={<button className="btn btn-ghost btn-sm" onClick={addTramo}>+ Agregar tramo</button>}
@@ -354,7 +348,6 @@ export default function AdminPlanAhorroForm() {
                 </div>
             </Section>
 
-            {/* SECCIÓN 5: Promociones especiales */}
             <Section
                 title="Promociones especiales"
                 subtitle="Solo el administrador puede activarlas. Los vendedores las ven en modo solo lectura."
@@ -395,7 +388,6 @@ export default function AdminPlanAhorroForm() {
                 ))}
             </Section>
 
-            {/* SECCIÓN 6: Observaciones */}
             <Section title="Observaciones">
                 <FormGroup label="Notas para la cotización (visible al vendedor)">
                     <textarea
@@ -408,7 +400,6 @@ export default function AdminPlanAhorroForm() {
                 </FormGroup>
             </Section>
 
-            {/* Footer */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
                 <button className="btn btn-ghost" onClick={() => navigate('/admin/plan-ahorro')}>
                     Cancelar
@@ -423,8 +414,6 @@ export default function AdminPlanAhorroForm() {
         </div>
     )
 }
-
-// ── Sub-componentes ──
 
 function Section({ title, subtitle, children, action }) {
     return (

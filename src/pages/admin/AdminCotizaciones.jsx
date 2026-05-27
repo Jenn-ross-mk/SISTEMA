@@ -18,6 +18,7 @@ export default function AdminCotizaciones() {
   const [filtroLocalidad, setFiltroLocalidad] = useState('')
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('')
   const [vendedores, setVendedores] = useState([])
   const [selected, setSelected] = useState(null)
   const [toast, setToast] = useState(null)
@@ -70,6 +71,12 @@ export default function AdminCotizaciones() {
     if (filtroVendedor && c.vendedor_id !== filtroVendedor) return false
     if (filtroFechaDesde && c.created_at < filtroFechaDesde) return false
     if (filtroFechaHasta && c.created_at > filtroFechaHasta + 'T23:59:59') return false
+    if (filtroTipo === 'plan_ahorro') {
+      if (!c.plan_nombre?.toLowerCase().includes('plan de ahorro')) return false
+    }
+    if (filtroTipo === 'convencional') {
+      if (c.plan_nombre?.toLowerCase().includes('plan de ahorro')) return false
+    }
     return true
   })
 
@@ -93,7 +100,7 @@ export default function AdminCotizaciones() {
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>
           {isAdmin ? 'Todas las cotizaciones' : 'Mis cotizaciones'}
         </h1>
-        <p style={{ color: '#8896a7', fontSize: '14px' }}>{filtered.length} cotizaciones{filtroVendedor || filtroLocalidad || search ? ' (filtradas)' : ''}</p>
+        <p style={{ color: '#8896a7', fontSize: '14px' }}>{filtered.length} cotizaciones{filtroVendedor || filtroLocalidad || search || filtroTipo ? ' (filtradas)' : ''}</p>
       </div>
 
       {/* Filters */}
@@ -101,6 +108,15 @@ export default function AdminCotizaciones() {
         <div className="form-group" style={{ minWidth: '200px', flex: 1 }}>
           <label className="form-label">Buscar</label>
           <input className="form-input" placeholder="Cliente, vehículo, vendedor..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+
+        <div className="form-group" style={{ minWidth: '180px' }}>
+          <label className="form-label">Tipo</label>
+          <select className="form-select" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="convencional">Convencional</option>
+            <option value="plan_ahorro">Plan de Ahorro</option>
+          </select>
         </div>
 
         {isAdmin && (
@@ -133,8 +149,8 @@ export default function AdminCotizaciones() {
           <label className="form-label">Hasta</label>
           <input type="date" className="form-input" value={filtroFechaHasta} onChange={e => setFiltroFechaHasta(e.target.value)} />
         </div>
-        {(search || filtroVendedor || filtroLocalidad || filtroFechaDesde || filtroFechaHasta) && (
-          <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(''); setFiltroVendedor(''); setFiltroLocalidad(''); setFiltroFechaDesde(''); setFiltroFechaHasta('') }} style={{ alignSelf: 'flex-end' }}>
+        {(search || filtroVendedor || filtroLocalidad || filtroFechaDesde || filtroFechaHasta || filtroTipo) && (
+          <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(''); setFiltroVendedor(''); setFiltroLocalidad(''); setFiltroFechaDesde(''); setFiltroFechaHasta(''); setFiltroTipo('') }} style={{ alignSelf: 'flex-end' }}>
             Limpiar
           </button>
         )}
@@ -160,6 +176,7 @@ export default function AdminCotizaciones() {
                       {isAdmin && <th>Vendedor</th>}
                       <th>Cliente</th>
                       <th>Vehículo</th>
+                      <th>Tipo</th>
                       <th>Localidad</th>
                       <th className="text-right">Saldo</th>
                       <th style={{ textAlign: 'center' }}>Acc.</th>
@@ -168,6 +185,7 @@ export default function AdminCotizaciones() {
                   <tbody>
                     {filtered.map(c => {
                       const vendedorInfo = vendedores.find(v => v.id === c.vendedor_id)
+                      const esPlanAhorro = c.plan_nombre?.toLowerCase().includes('plan de ahorro')
                       return (
                         <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor: 'pointer', background: selected?.id === c.id ? 'rgba(0,51,102,0.04)' : undefined }}>
                           <td style={{ fontSize: '13px', color: '#8896a7', whiteSpace: 'nowrap' }}>
@@ -177,6 +195,12 @@ export default function AdminCotizaciones() {
                           {isAdmin && <td style={{ fontWeight: '500', fontSize: '13px' }}>{c.vendedor_nombre}</td>}
                           <td style={{ fontWeight: '500' }}>{c.cliente_nombre}</td>
                           <td style={{ fontSize: '13px', maxWidth: '180px' }}>{c.vehiculo_descripcion}</td>
+                          <td>
+                            {esPlanAhorro
+                              ? <span className="badge badge-gold">Plan Ahorro</span>
+                              : <span className="badge badge-navy">Convencional</span>
+                            }
+                          </td>
                           <td>
                             {vendedorInfo?.localidad
                               ? <span className="badge badge-navy">{vendedorInfo.localidad}</span>
@@ -214,10 +238,17 @@ export default function AdminCotizaciones() {
         {/* Detail panel */}
         {selected && (() => {
           const vendedorInfo = vendedores.find(v => v.id === selected.vendedor_id)
+          const esPlanAhorro = selected.plan_nombre?.toLowerCase().includes('plan de ahorro')
           return (
             <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)', position: 'sticky', top: '20px' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e6ec', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366' }}>Detalle</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366' }}>Detalle</h3>
+                  {esPlanAhorro
+                    ? <span className="badge badge-gold">Plan Ahorro</span>
+                    : <span className="badge badge-navy">Convencional</span>
+                  }
+                </div>
                 <button onClick={() => setSelected(null)} className="btn btn-ghost btn-sm btn-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -240,25 +271,46 @@ export default function AdminCotizaciones() {
                 ))}
 
                 <div style={{ borderTop: '1px solid #e2e6ec', marginTop: '14px', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {[
-                    ['Precio base', selected.precio_base],
-                    ['Gastos bancarios', (selected.quebranto || 0) + (selected.sellado || 0)],
-                    ['Entrega (usado)', selected.entrega_usado],
-                    ['Monto financiado', selected.monto_financiado],
-                    ['Descuento', selected.descuento],
-                  ].map(([k, v]) => (
-                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                      <span style={{ color: '#4a5568' }}>{k}</span>
-                      <span style={{ fontWeight: '600' }}>${fmt(v)}</span>
-                    </div>
-                  ))}
-                  {selected.plan_nombre && (
-                    <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '4px' }}>
-                      Plan: {selected.plan_nombre} · Cuota: ${fmt(selected.valor_cuota)}
-                    </div>
+                  {esPlanAhorro ? (
+                    <>
+                      {[
+                        ['Valor móvil', selected.precio_base],
+                        ['Cuota 1 con promo', selected.valor_cuota],
+                      ].map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <span style={{ color: '#4a5568' }}>{k}</span>
+                          <span style={{ fontWeight: '600' }}>${fmt(v)}</span>
+                        </div>
+                      ))}
+                      {selected.plan_nombre && (
+                        <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '4px' }}>
+                          Plan: {selected.plan_nombre}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {[
+                        ['Precio base', selected.precio_base],
+                        ['Gastos bancarios', (selected.quebranto || 0) + (selected.sellado || 0)],
+                        ['Entrega (usado)', selected.entrega_usado],
+                        ['Monto financiado', selected.monto_financiado],
+                        ['Descuento', selected.descuento],
+                      ].map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <span style={{ color: '#4a5568' }}>{k}</span>
+                          <span style={{ fontWeight: '600' }}>${fmt(v)}</span>
+                        </div>
+                      ))}
+                      {selected.plan_nombre && (
+                        <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '4px' }}>
+                          Plan: {selected.plan_nombre} · Cuota: ${fmt(selected.valor_cuota)}
+                        </div>
+                      )}
+                    </>
                   )}
                   <div style={{ borderTop: '2px solid #003366', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: '#003366', fontSize: '16px' }}>
-                    <span>SALDO</span>
+                    <span>{esPlanAhorro ? 'CUOTA 1' : 'SALDO'}</span>
                     <span>${fmt(selected.saldo_efectivo)}</span>
                   </div>
                 </div>
