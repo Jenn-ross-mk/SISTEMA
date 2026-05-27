@@ -73,7 +73,7 @@ export default function CotizadorPlanAhorro() {
   return (
     <div style={{ padding: '20px 24px', maxWidth: '860px', margin: '0 auto' }}>
 
-      {/* Botón volver */}
+      {/* Botón volver — no entra en el PDF */}
       <div style={{ marginBottom: '16px' }}>
         <button
           onClick={() => navigate('/plan-ahorro')}
@@ -87,6 +87,7 @@ export default function CotizadorPlanAhorro() {
         </button>
       </div>
 
+      {/* ── ÁREA QUE SE CONVIERTE A PDF ── */}
       <div id="cotizacion-pa-print" style={{ fontFamily: 'Arial, sans-serif', background: 'white' }}>
 
         {/* HEADER */}
@@ -103,28 +104,41 @@ export default function CotizadorPlanAhorro() {
         <div style={{ border: '0.5px solid #dde2ea', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>
 
           {/* VENDEDOR / CLIENTE */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
               <div style={lbl}>Vendedor</div>
               <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{profile?.nombre || '—'}</div>
             </div>
             <div>
               <div style={lbl}>Cliente</div>
+              {/* Input visible en pantalla, texto plano en PDF */}
               <input
+                id="input-cliente"
                 style={{ width: '100%', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '5px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}
                 placeholder="Nombre del cliente"
                 value={cliente}
-                onChange={e => setCliente(e.target.value)}
+                onChange={e => {
+                  setCliente(e.target.value)
+                  const span = document.getElementById('span-cliente')
+                  if (span) span.textContent = e.target.value || 'Nombre del cliente'
+                }}
               />
+              {/* Este span reemplaza al input en el PDF */}
+              <span
+                id="span-cliente"
+                style={{ display: 'none', fontSize: '13px', fontWeight: '500', color: '#111827' }}
+              >
+                {cliente || 'Nombre del cliente'}
+              </span>
             </div>
           </div>
 
           {/* VEHÍCULO */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea', display: 'flex', gap: '14px', alignItems: 'center' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #dde2ea', display: 'flex', gap: '16px', alignItems: 'center' }}>
             {vehiculo.imagen_url ? (
-              <img src={vehiculo.imagen_url} alt="" style={{ width: '110px', height: '74px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
+              <img src={vehiculo.imagen_url} alt="" style={{ width: '130px', height: '88px', objectFit: 'cover', borderRadius: '7px', flexShrink: 0 }} />
             ) : (
-              <div style={{ width: '110px', height: '74px', background: '#f0f2f5', borderRadius: '7px', border: '0.5px solid #dde2ea', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '130px', height: '88px', background: '#f0f2f5', borderRadius: '7px', border: '0.5px solid #dde2ea', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c8d0da" strokeWidth="1.5">
                   <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
                   <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
@@ -132,10 +146,10 @@ export default function CotizadorPlanAhorro() {
               </div>
             )}
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'inline-block', background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '5px', padding: '2px 7px', fontSize: '10px', fontWeight: '600', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+              <div style={{ display: 'inline-block', background: '#E6F1FB', border: '0.5px solid #B5D4F4', borderRadius: '5px', padding: '2px 7px', fontSize: '10px', fontWeight: '600', color: '#0C447C', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
                 Modelo Inicial
               </div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: '#003366', marginBottom: '5px' }}>
+              <div style={{ fontSize: '17px', fontWeight: '500', color: '#003366', marginBottom: '8px', lineHeight: 1.2 }}>
                 {vehiculo.marca} {vehiculo.modelo} {vehiculo.version}
               </div>
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
@@ -146,14 +160,14 @@ export default function CotizadorPlanAhorro() {
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={lbl}>Valor móvil vigente</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: '#003366' }}>{fmtPeso(vehiculo.valor_movil)}</div>
-              <div style={{ fontSize: '10px', color: '#8896a7', marginTop: '2px' }}>Actualizable mensualmente</div>
+              <div style={{ fontSize: '17px', fontWeight: '500', color: '#003366' }}>{fmtPeso(vehiculo.valor_movil)}</div>
+              <div style={{ fontSize: '10px', color: '#8896a7', marginTop: '3px' }}>Actualizable mensualmente</div>
             </div>
           </div>
 
           {/* CUOTA 1 CON PROMO */}
           {plan && plan.cuota1_sin_promo > 0 && (
-            <div style={{ padding: '10px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '14px 20px', background: '#f5f7fa', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Cuota 1 — Promoción vigente</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div style={{ background: 'white', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '12px 14px' }}>
@@ -175,7 +189,7 @@ export default function CotizadorPlanAhorro() {
 
           {/* CARACTERÍSTICAS */}
           {plan && (
-            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Características del plan</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
@@ -196,7 +210,7 @@ export default function CotizadorPlanAhorro() {
           )}
 
           {/* ESQUEMA DE CUOTAS + PROMOCIONES */}
-          <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
 
               {/* Esquema */}
@@ -259,19 +273,29 @@ export default function CotizadorPlanAhorro() {
 
           {/* OBSERVACIONES */}
           {plan?.observaciones ? (
-            <div style={{ padding: '10px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #dde2ea' }}>
               <div style={stitle}>Observaciones</div>
               <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
             </div>
           ) : null}
 
           {/* FOOTER */}
-          <div style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: '#8896a7' }}>
               Presupuesto válido por <strong style={{ color: '#111827' }}>10 días</strong>
             </span>
             <button
-              onClick={handleDescargarPDF}
+              onClick={async () => {
+                // Antes de generar: mostrar span, ocultar input
+                const input = document.getElementById('input-cliente')
+                const span  = document.getElementById('span-cliente')
+                if (input) input.style.display = 'none'
+                if (span)  span.style.display  = 'inline'
+                await handleDescargarPDF()
+                // Restaurar después
+                if (input) input.style.display = ''
+                if (span)  span.style.display  = 'none'
+              }}
               disabled={generando}
               style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: generando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: generando ? 0.7 : 1 }}
             >
@@ -298,7 +322,7 @@ export default function CotizadorPlanAhorro() {
   )
 }
 
-const lbl = { fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }
-const stitle = { fontSize: '11px', fontWeight: '500', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }
+const lbl     = { fontSize: '10px', fontWeight: '500', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }
+const stitle  = { fontSize: '11px', fontWeight: '500', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }
 const badgeBlue   = { background: '#E6F1FB', color: '#0C447C', fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px' }
 const badgeOrange = { background: '#FFF3E0', color: '#7C4000', fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px' }
