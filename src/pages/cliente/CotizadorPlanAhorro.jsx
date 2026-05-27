@@ -92,6 +92,10 @@ export default function CotizadorPlanAhorro() {
 
             document.querySelectorAll('.pdf-input').forEach(el => el.style.display = 'none')
             document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'block')
+            const obsTextarea = document.getElementById('obs-vendedor')
+            const obsText = document.getElementById('obs-vendedor-text')
+            if (obsTextarea) obsTextarea.style.display = 'none'
+            if (obsText) obsText.style.display = 'block'
 
             await html2pdf()
                 .set({
@@ -106,10 +110,16 @@ export default function CotizadorPlanAhorro() {
 
             document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
             document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
+            if (obsTextarea) obsTextarea.style.display = ''
+            if (obsText) obsText.style.display = 'none'
         } catch (err) {
             console.error(err)
             document.querySelectorAll('.pdf-input').forEach(el => el.style.display = '')
             document.querySelectorAll('.pdf-text').forEach(el => el.style.display = 'none')
+            const obsTextarea = document.getElementById('obs-vendedor')
+            const obsText = document.getElementById('obs-vendedor-text')
+            if (obsTextarea) obsTextarea.style.display = ''
+            if (obsText) obsText.style.display = 'none'
         }
         setGenerando(false)
     }
@@ -296,7 +306,7 @@ export default function CotizadorPlanAhorro() {
                         </div>
                     </div>
 
-                    {/* OBSERVACIONES DEL ADMIN */}
+                    {/* OBSERVACIONES DEL ADMIN (solo lectura, si existen) */}
                     {plan?.observaciones && (
                         <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                             <div style={stitle}>Observaciones</div>
@@ -304,17 +314,17 @@ export default function CotizadorPlanAhorro() {
                         </div>
                     )}
 
-                    {/* OBSERVACIONES DEL VENDEDOR */}
+                    {/* NOTAS DEL VENDEDOR — siempre visible */}
                     <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                         <div style={stitle}>Notas adicionales</div>
                         <textarea
-                            className="pdf-input"
+                            id="obs-vendedor"
                             value={observaciones}
                             onChange={e => setObservaciones(e.target.value)}
                             placeholder="Notas adicionales para esta cotización..."
                             style={{ width: '100%', minHeight: '80px', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '8px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
                         />
-                        <div className="pdf-text" style={{ display: 'none', fontSize: '12px', color: '#4a5568', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                        <div id="obs-vendedor-text" style={{ display: 'none', fontSize: '12px', color: '#4a5568', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                             {observaciones}
                         </div>
                     </div>
