@@ -15,6 +15,7 @@ export default function CotizadorPlanAhorro() {
     const [loading, setLoading] = useState(true)
     const [cliente, setCliente] = useState('')
     const [generando, setGenerando] = useState(false)
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         async function load() {
@@ -44,26 +45,36 @@ export default function CotizadorPlanAhorro() {
     const fmtPeso = n => n ? `$${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0 })}` : '—'
     const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-    async function handleGuardar() {
+    async function handleSave() {
         if (!cliente || !profile) return
-        await supabase.from('cotizaciones').insert({
-            vendedor_id: profile.id,
-            vendedor_nombre: profile.nombre,
-            cliente_nombre: cliente,
-            vehiculo_id: id,
-            vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
-            provincia: profile.localidad || 'Sin localidad',
-            precio_base: vehiculo.valor_movil || 0,
-            plan_nombre: plan?.sistema || 'Plan de Ahorro',
-            valor_cuota: plan?.cuota1_con_promo || 0,
-            saldo_efectivo: plan?.cuota1_con_promo || 0,
-            monto_financiado: 0,
-            cuotas: 0,
-            quebranto: 0,
-            sellado: 0,
-            entrega_usado: 0,
-            descuento: plan?.bonificacion_pct || 0,
-        })
+        if (saving) return
+        setSaving(true)
+        try {
+            const { error } = await supabase.from('cotizaciones').insert({
+                vendedor_id: profile.id,
+                vendedor_nombre: profile.nombre,
+                cliente_nombre: cliente,
+                vehiculo_id: id,
+                vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
+                provincia: profile.localidad || 'Sin localidad',
+                precio_base: vehiculo.valor_movil || 0,
+                plan_nombre: plan?.sistema || 'Plan de Ahorro',
+                valor_cuota: plan?.cuota1_con_promo || 0,
+                saldo_efectivo: plan?.cuota1_con_promo || 0,
+                monto_financiado: 0,
+                cuotas: 0,
+                quebranto: 0,
+                sellado: 0,
+                entrega_usado: 0,
+                descuento: plan?.bonificacion_pct || 0,
+            })
+            if (error) throw error
+        } catch (err) {
+            console.error('Error al guardar cotización:', err)
+            alert('No se pudo guardar la cotización. Intentá de nuevo.')
+        } finally {
+            setSaving(false)
+        }
     }
 
     async function handleDescargarPDF() {
@@ -71,10 +82,9 @@ export default function CotizadorPlanAhorro() {
             alert('Ingresá el nombre del cliente antes de descargar.')
             return
         }
+        await handleSave()
         setGenerando(true)
         try {
-            await handleGuardar()
-
             const html2pdf = (await import('html2pdf.js')).default
             const elemento = document.getElementById('cotizacion-pa-print')
             const nombreArchivo = `cotizacion-plan-ahorro-${vehiculo.marca}-${vehiculo.modelo}-${fechaHoy.replace(/\//g, '-')}.pdf`
@@ -321,10 +331,15 @@ export default function CotizadorPlanAhorro() {
                         </span>
                         <button
                             onClick={handleDescargarPDF}
-                            disabled={generando}
-                            style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: generando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: generando ? 0.7 : 1 }}
+                            disabled={generando || saving}
+                            style={{ background: '#003366', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif', cursor: (generando || saving) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: (generando || saving) ? 0.7 : 1 }}
                         >
-                            {generando ? (
+                            {saving ? (
+                                <>
+                                    <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                    Guardando...
+                                </>
+                            ) : generando ? (
                                 <>
                                     <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                                     Generando...
