@@ -14,6 +14,7 @@ export default function CotizadorPlanAhorro() {
     const [promos, setPromos] = useState([])
     const [loading, setLoading] = useState(true)
     const [cliente, setCliente] = useState('')
+    const [observaciones, setObservaciones] = useState('')
     const [generando, setGenerando] = useState(false)
     const [saving, setSaving] = useState(false)
 
@@ -265,7 +266,6 @@ export default function CotizadorPlanAhorro() {
                                     ))}
                                 </div>
                             </div>
-
                             <div>
                                 <div style={stitle}>Promociones especiales</div>
                                 {promos.length === 0 ? (
@@ -296,13 +296,28 @@ export default function CotizadorPlanAhorro() {
                         </div>
                     </div>
 
-                    {/* OBSERVACIONES */}
+                    {/* OBSERVACIONES DEL ADMIN */}
                     {plan?.observaciones && (
                         <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
                             <div style={stitle}>Observaciones</div>
                             <div style={{ fontSize: '12px', color: '#4a5568', lineHeight: 1.5 }}>{plan.observaciones}</div>
                         </div>
                     )}
+
+                    {/* OBSERVACIONES DEL VENDEDOR */}
+                    <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #dde2ea' }}>
+                        <div style={stitle}>Notas adicionales</div>
+                        <textarea
+                            className="pdf-input"
+                            value={observaciones}
+                            onChange={e => setObservaciones(e.target.value)}
+                            placeholder="Notas adicionales para esta cotización..."
+                            style={{ width: '100%', minHeight: '80px', border: '0.5px solid #c4cad5', borderRadius: '5px', padding: '8px 9px', fontSize: '13px', fontFamily: 'Arial, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
+                        />
+                        <div className="pdf-text" style={{ display: 'none', fontSize: '12px', color: '#4a5568', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                            {observaciones}
+                        </div>
+                    </div>
 
                     {/* FOOTER */}
                     <div style={{ margin: '16px 20px', background: '#f5f7fa', border: '0.5px solid #dde2ea', borderRadius: '8px', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
