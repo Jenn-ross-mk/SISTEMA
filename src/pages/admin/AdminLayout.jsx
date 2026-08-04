@@ -8,7 +8,7 @@ const NAV = [
       <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
     </svg>
   )},
-  { to: '/admin/vehiculos', label: 'Vehículos', icon: (
+  { to: '/admin/vehiculos', label: 'Vehículos', adminOnly: true, icon: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
       <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
@@ -36,7 +36,7 @@ const NAV = [
       <line x1="8" y1="9" x2="10" y2="9"/>
     </svg>
   )},
-  { to: '/admin/plan-ahorro', label: 'Plan de Ahorro', icon: (
+  { to: '/admin/plan-ahorro', label: 'Plan de Ahorro', adminOnly: true, icon: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M12 2a5 5 0 0 1 5 5c0 3-5 8-5 8S7 10 7 7a5 5 0 0 1 5-5z"/>
       <circle cx="12" cy="7" r="2"/>
@@ -47,6 +47,8 @@ const NAV = [
 export default function AdminLayout() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const esSupervisor = profile?.rol === 'supervisor'
+  const navItems = NAV.filter(item => !(item.adminOnly && esSupervisor))
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -75,7 +77,7 @@ export default function AdminLayout() {
         </div>
 
         <nav style={{ flex: 1, padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {NAV.map(({ to, label, icon, exact }) => (
+          {navItems.map(({ to, label, icon, exact }) => (
             <NavLink key={to} to={to} end={exact}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: '10px',
@@ -100,7 +102,7 @@ export default function AdminLayout() {
             </div>
             <div style={{ overflow: 'hidden' }}>
               <div style={{ color: 'white', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.nombre}</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>Administrador</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>{esSupervisor ? 'Supervisor' : 'Administrador'}</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>

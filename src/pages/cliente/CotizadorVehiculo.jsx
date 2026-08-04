@@ -23,6 +23,10 @@ function parseMonto(str) {
   return parseFloat((str || '').replace(/\./g, '').replace(',', '.')) || 0
 }
 
+function telefonoValido(str) {
+  return /^\d{8,10}$/.test(str || '')
+}
+
 export default function CotizadorVehiculo() {
   const { id } = useParams()
   const { profile } = useAuth()
@@ -36,6 +40,7 @@ export default function CotizadorVehiculo() {
 
   const [vendedor, setVendedor] = useState('')
   const [cliente, setCliente] = useState('')
+  const [telefono, setTelefono] = useState('')
   const [provincia, setProvincia] = useState('')
   const [entregaUsado, setEntregaUsado] = useState('')
   const [descuento, setDescuento] = useState('')
@@ -130,7 +135,7 @@ export default function CotizadorVehiculo() {
   }
 
   async function handleSave() {
-    if (!cliente || !provincia || !profile) return
+    if (!cliente || !provincia || !telefonoValido(telefono) || !profile) return
     if (saving) return
     setSaving(true)
     try {
@@ -138,6 +143,7 @@ export default function CotizadorVehiculo() {
         vendedor_id: profile.id,
         vendedor_nombre: vendedor || profile.nombre,
         cliente_nombre: cliente,
+        telefono,
         vehiculo_id: id,
         vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
         provincia,
@@ -219,8 +225,8 @@ export default function CotizadorVehiculo() {
 
         <div style={{ background: 'white', border: '1px solid #e2e6ec', borderTop: 'none', borderRadius: '0 0 12px 12px', overflow: 'hidden' }}>
 
-          {/* Vendedor / Cliente */}
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {/* Vendedor / Cliente / Teléfono */}
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             <div className="form-group">
               <label className="form-label">Vendedor</label>
               <input className="form-input" value={vendedor} onChange={e => setVendedor(e.target.value)} placeholder="Nombre del vendedor" />
@@ -228,6 +234,18 @@ export default function CotizadorVehiculo() {
             <div className="form-group">
               <label className="form-label">Cliente</label>
               <input className="form-input" value={cliente} onChange={e => setCliente(e.target.value)} placeholder="Nombre del cliente" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Teléfono *</label>
+              <input
+                className="form-input"
+                type="tel"
+                inputMode="numeric"
+                value={telefono}
+                onChange={e => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Ej: 2974123456"
+                maxLength={10}
+              />
             </div>
           </div>
 
@@ -239,17 +257,10 @@ export default function CotizadorVehiculo() {
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: '#003366', lineHeight: 1 }}>
                   CHEVROLET {vehiculo.modelo?.toUpperCase()}
                 </div>
-                <div style={{ fontSize: '15px', color: '#4a5568', marginTop: '4px' }}>{vehiculo.version}</div>
+                <div style={{ fontSize: '13px', color: '#4a5568' }}>{vehiculo.version}</div>
               </div>
-              {vehiculo.imagen_url && (
-                <img src={vehiculo.imagen_url} alt={vehiculo.modelo} style={{ height: '90px', width: '160px', objectFit: 'cover', borderRadius: '8px' }} />
-              )}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div className="form-group" style={{ minWidth: '280px' }}>
-                <label className="form-label">Precio base — Gastos CyO</label>
-                <select className="form-select" value={provincia} onChange={e => setProvincia(e.target.value)}>
+              <div>
+                <select className="form-select" value={provincia} onChange={e => setProvincia(e.target.value)} style={{ minWidth: '180px' }}>
                   <option value="">Seleccionar provincia</option>
                   <option value="chubut">Chubut — ${fmt(vehiculo.precio_chubut)}</option>
                   <option value="santacruz">Santa Cruz — ${fmt(vehiculo.precio_santacruz)}</option>
@@ -291,70 +302,52 @@ export default function CotizadorVehiculo() {
 
           {/* Planes de financiación */}
           {nombresPlanes.map(nombrePlan => {
-            const cuotasDelPlan = planesByNombre[nombrePlan]
             const state = planState[nombrePlan] || { monto: '', cuotaId: '' }
             const montoNum = parseMonto(state.monto)
-            const isActive = montoNum > 0
-            const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
-            const cuotaSeleccionada = planes.find(p => p.id === state.cuotaId)
+            const cuotasDelPlan = planesByNombre[nombrePlan] || []
+            const isDisabled = false
 
-            if (isPrinting && !isActive) return null
+            if (isPrinting && montoNum <= 0) return null
 
             return (
-              <div
-                key={nombrePlan}
-                style={{
-                  padding: '16px 24px',
-                  borderBottom: '1px solid #e2e6ec',
-                  opacity: isDisabled ? 0.4 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                {/* Encabezado del plan */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    {nombrePlan}
+              <div key={nombrePlan} style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec' }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                  {nombrePlan}
+                </div>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '12px' }}>
+                  <div className="form-group" style={{ minWidth: '200px' }}>
+                    <label className="form-label">Monto a financiar</label>
+                    {isPrinting
+                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
+                      : <input
+                          className="form-input"
+                          value={state.monto}
+                          onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
+                          placeholder="$ 0.00"
+                        />}
                   </div>
-                  {cuotaSeleccionada && (
-                    cuotaSeleccionada.tna === 0
-                      ? <span className="badge badge-green">TASA 0%</span>
-                      : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>
-                  )}
                 </div>
 
-                {/* Monto a financiar */}
-                <div className="form-group" style={{ maxWidth: '220px', marginBottom: '14px' }}>
-                  <label className="form-label">Monto a financiar</label>
-                  {isPrinting
-                    ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
-                    : <input
-                        className="form-input"
-                        disabled={isDisabled}
-                        value={state.monto}
-                        onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
-                        placeholder="$ 0.00"
-                      />
-                  }
-                </div>
-
-                {/* Tarjetitas de cuotas */}
-                {isPrinting ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {cuotasDelPlan.length > 4 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '8px' }}>
                     {cuotasDelPlan.map(p => {
                       const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
                       const isSelected = p.id === state.cuotaId
                       const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
+
                       return (
                         <div
                           key={p.id}
+                          onClick={() => !excede && handleCuotaChange(nombrePlan, p.id)}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1px solid #e2e6ec',
-                            background: isSelected ? '#003366' : '#f8f9fb',
+                            border: isSelected ? '2px solid #003366' : '1.5px solid #d1d8e0',
+                            background: isSelected ? '#003366' : 'white',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
-                            minWidth: '110px',
-                            opacity: excede ? 0.45 : 1,
+                            cursor: excede ? 'not-allowed' : 'pointer',
+                            opacity: excede ? 0.4 : 1,
+                            transition: 'all 0.15s',
                           }}
                         >
                           <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
@@ -521,7 +514,7 @@ export default function CotizadorVehiculo() {
         <button
           className="btn btn-primary"
           onClick={handlePDF}
-          disabled={!cliente || !provincia || saving}
+          disabled={!cliente || !provincia || !telefonoValido(telefono) || saving}
         >
           {saving
             ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white' }} /> Guardando...</>

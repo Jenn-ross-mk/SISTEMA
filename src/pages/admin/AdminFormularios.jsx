@@ -491,6 +491,7 @@ function AdminFormModal({ cotizaciones, onClose, onSave, profile }) {
 
 export default function AdminFormularios() {
     const { profile } = useAuth()
+    const esAdmin = profile?.rol === 'admin'
     const [formularios, setFormularios] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -661,9 +662,11 @@ export default function AdminFormularios() {
                                                     <button onClick={() => setSelected(f)} className="btn btn-ghost btn-sm btn-icon" title="Ver">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                                                     </button>
+                                                    {esAdmin && (
                                                     <button onClick={() => handleDelete(f)} className="btn btn-danger btn-sm btn-icon" title="Eliminar">
                                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
                                                     </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

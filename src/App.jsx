@@ -17,7 +17,7 @@ import AdminFormularios from './pages/admin/AdminFormularios'
 import AdminPlanAhorro from './pages/admin/AdminPlanAhorro'
 import AdminPlanAhorroForm from './pages/admin/AdminPlanAhorroForm'
 
-function PrivateRoute({ children, adminOnly = false }) {
+function PrivateRoute({ children, allowedRoles = null }) {
   const { user, profile, loading } = useAuth()
   if (loading) return (
     <div className="loading-center" style={{ height: '100vh' }}>
@@ -25,7 +25,7 @@ function PrivateRoute({ children, adminOnly = false }) {
     </div>
   )
   if (!user) return <Navigate to="/login" replace />
-  if (adminOnly && profile?.rol !== 'admin') return <Navigate to="/" replace />
+  if (allowedRoles && !allowedRoles.includes(profile?.rol)) return <Navigate to="/" replace />
   return children
 }
 
@@ -43,17 +43,17 @@ function AppRoutes() {
         <Route path="plan-ahorro/:id" element={<CotizadorPlanAhorro />} />
       </Route>
 
-      <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>}>
+      <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'supervisor']}><AdminLayout /></PrivateRoute>}>
         <Route index element={<AdminDashboard />} />
-        <Route path="vehiculos" element={<AdminVehiculos />} />
-        <Route path="vehiculos/nuevo" element={<AdminVehiculoForm />} />
-        <Route path="vehiculos/editar/:id" element={<AdminVehiculoForm />} />
+        <Route path="vehiculos" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculos /></PrivateRoute>} />
+        <Route path="vehiculos/nuevo" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculoForm /></PrivateRoute>} />
+        <Route path="vehiculos/editar/:id" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculoForm /></PrivateRoute>} />
         <Route path="vendedores" element={<AdminVendedores />} />
         <Route path="cotizaciones" element={<AdminCotizaciones />} />
         <Route path="formularios" element={<AdminFormularios />} />
-        <Route path="plan-ahorro" element={<AdminPlanAhorro />} />
-        <Route path="plan-ahorro/nuevo" element={<AdminPlanAhorroForm />} />
-        <Route path="plan-ahorro/editar/:id" element={<AdminPlanAhorroForm />} />
+        <Route path="plan-ahorro" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorro /></PrivateRoute>} />
+        <Route path="plan-ahorro/nuevo" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorroForm /></PrivateRoute>} />
+        <Route path="plan-ahorro/editar/:id" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorroForm /></PrivateRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

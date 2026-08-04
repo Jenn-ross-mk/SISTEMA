@@ -10,7 +10,8 @@ function fmt(n) {
 
 export default function AdminCotizaciones() {
   const { profile } = useAuth()
-  const isAdmin = profile?.rol === 'admin'
+  const puedeVerTodo = profile?.rol === 'admin' || profile?.rol === 'supervisor'
+  const esAdmin = profile?.rol === 'admin'
   const [cotizaciones, setCotizaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -29,12 +30,12 @@ export default function AdminCotizaciones() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (!isAdmin) query = query.eq('vendedor_id', profile.id)
+    if (!puedeVerTodo) query = query.eq('vendedor_id', profile.id)
 
     const { data } = await query
     setCotizaciones(data || [])
 
-    if (isAdmin) {
+    if (puedeVerTodo) {
       const { data: v } = await supabase.from('profiles').select('id, nombre, localidad').order('nombre')
       setVendedores(v || [])
     }
@@ -98,7 +99,7 @@ export default function AdminCotizaciones() {
 
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>
-          {isAdmin ? 'Todas las cotizaciones' : 'Mis cotizaciones'}
+          {puedeVerTodo ? 'Todas las cotizaciones' : 'Mis cotizaciones'}
         </h1>
         <p style={{ color: '#8896a7', fontSize: '14px' }}>{filtered.length} cotizaciones{filtroVendedor || filtroLocalidad || search || filtroTipo ? ' (filtradas)' : ''}</p>
       </div>
@@ -119,7 +120,7 @@ export default function AdminCotizaciones() {
           </select>
         </div>
 
-        {isAdmin && (
+        {puedeVerTodo && (
           <>
             <div className="form-group" style={{ minWidth: '180px' }}>
               <label className="form-label">Localidad</label>
@@ -173,7 +174,7 @@ export default function AdminCotizaciones() {
                   <thead>
                     <tr>
                       <th>Fecha</th>
-                      {isAdmin && <th>Vendedor</th>}
+                      {puedeVerTodo && <th>Vendedor</th>}
                       <th>Cliente</th>
                       <th>Vehículo</th>
                       <th>Tipo</th>
@@ -192,7 +193,7 @@ export default function AdminCotizaciones() {
                             {new Date(c.created_at).toLocaleDateString('es-AR')}
                             <div style={{ fontSize: '11px' }}>{new Date(c.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</div>
                           </td>
-                          {isAdmin && <td style={{ fontWeight: '500', fontSize: '13px' }}>{c.vendedor_nombre}</td>}
+                          {puedeVerTodo && <td style={{ fontWeight: '500', fontSize: '13px' }}>{c.vendedor_nombre}</td>}
                           <td style={{ fontWeight: '500' }}>{c.cliente_nombre}</td>
                           <td style={{ fontSize: '13px', maxWidth: '180px' }}>{c.vehiculo_descripcion}</td>
                           <td>
@@ -213,7 +214,7 @@ export default function AdminCotizaciones() {
                               <button onClick={() => setSelected(c)} className="btn btn-ghost btn-sm btn-icon" title="Ver detalle">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                               </button>
-                              {isAdmin && (
+                              {esAdmin && (
                                 <button onClick={() => handleDelete(c)} className="btn btn-danger btn-sm btn-icon" title="Eliminar">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                                 </button>

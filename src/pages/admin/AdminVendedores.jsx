@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 
 const LOCALIDADES = ['Comodoro Rivadavia', 'Trelew', 'Puerto Madryn', 'Esquel']
+const ROL_LABEL = { admin: 'Administrador', supervisor: 'Supervisor', vendedor: 'Vendedor' }
+const ROL_BADGE = { admin: 'badge-navy', supervisor: 'badge-gold', vendedor: 'badge-green' }
 
 export default function AdminVendedores() {
+  const { profile } = useAuth()
+  const esSupervisor = profile?.rol === 'supervisor'
   const [vendedores, setVendedores] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -68,9 +73,9 @@ export default function AdminVendedores() {
     showToast(`Usuario ${!v.activo ? 'activado' : 'desactivado'}`)
   }
 
-  async function handleCambiarRol(v) {
-    const nuevoRol = v.rol === 'admin' ? 'vendedor' : 'admin'
-    if (!confirm(`¿Cambiar el rol de ${v.nombre} a ${nuevoRol}?`)) return
+  async function handleCambiarRol(v, nuevoRol) {
+    if (nuevoRol === v.rol) return
+    if (!confirm(`¿Cambiar el rol de ${v.nombre} a ${ROL_LABEL[nuevoRol]}?`)) return
     await supabase.from('profiles').update({ rol: nuevoRol }).eq('id', v.id)
     setVendedores(prev => prev.map(x => x.id === v.id ? { ...x, rol: nuevoRol } : x))
     showToast('Rol actualizado')
@@ -85,12 +90,14 @@ export default function AdminVendedores() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>Vendedores</h1>
-          <p style={{ color: '#8896a7', fontSize: '14px' }}>{vendedores.filter(v => v.rol === 'vendedor').length} vendedores · {vendedores.filter(v => v.rol === 'admin').length} admins</p>
+          <p style={{ color: '#8896a7', fontSize: '14px' }}>{vendedores.filter(v => v.rol === 'vendedor').length} vendedores · {vendedores.filter(v => v.rol === 'supervisor').length} supervisores · {vendedores.filter(v => v.rol === 'admin').length} admins</p>
         </div>
+        {!esSupervisor && (
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nuevo usuario
         </button>
+        )}
       </div>
 
       <div style={{ background: 'rgba(0,51,102,0.06)', border: '1px solid rgba(0,51,102,0.15)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: '#003366' }}>
@@ -152,8 +159,8 @@ export default function AdminVendedores() {
                       )}
                     </td>
                     <td>
-                      <span className={`badge ${v.rol === 'admin' ? 'badge-navy' : 'badge-green'}`}>
-                        {v.rol === 'admin' ? 'Administrador' : 'Vendedor'}
+                      <span className={`badge ${ROL_BADGE[v.rol] || 'badge-green'}`}>
+                        {ROL_LABEL[v.rol] || v.rol}
                       </span>
                     </td>
                     <td>
@@ -165,14 +172,25 @@ export default function AdminVendedores() {
                       {new Date(v.created_at).toLocaleDateString('es-AR')}
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        <button onClick={() => toggleActivo(v)} className="btn btn-ghost btn-sm" title={v.activo ? 'Desactivar' : 'Activar'}>
-                          {v.activo ? 'Desactivar' : 'Activar'}
-                        </button>
-                        <button onClick={() => handleCambiarRol(v)} className="btn btn-ghost btn-sm" title="Cambiar rol">
-                          → {v.rol === 'admin' ? 'Vendedor' : 'Admin'}
-                        </button>
-                      </div>
+                      {esSupervisor ? (
+                        <div style={{ textAlign: 'center', color: '#c0c8d0', fontSize: '12px' }}>—</div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                          <button onClick={() => toggleActivo(v)} className="btn btn-ghost btn-sm" title={v.activo ? 'Desactivar' : 'Activar'}>
+                            {v.activo ? 'Desactivar' : 'Activar'}
+                          </button>
+                          <select
+                            className="form-select"
+                            style={{ fontSize: '12px', padding: '4px 8px' }}
+                            value={v.rol}
+                            onChange={e => handleCambiarRol(v, e.target.value)}
+                          >
+                            <option value="vendedor">Vendedor</option>
+                            <option value="supervisor">Supervisor</option>
+                            <option value="admin">Administrador</option>
+                          </select>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -209,6 +227,7 @@ export default function AdminVendedores() {
                   <label className="form-label">Rol</label>
                   <select className="form-select" value={form.rol} onChange={e => setForm(p => ({ ...p, rol: e.target.value }))}>
                     <option value="vendedor">Vendedor</option>
+                    <option value="supervisor">Supervisor</option>
                     <option value="admin">Administrador</option>
                   </select>
                 </div>
