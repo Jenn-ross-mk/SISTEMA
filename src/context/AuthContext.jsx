@@ -48,8 +48,18 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function signIn(email, password) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return { error }
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('activo')
+      .eq('id', data.user.id)
+      .single()
+    if (profileData && profileData.activo === false) {
+      await supabase.auth.signOut()
+      return { error: { message: 'CUENTA_INACTIVA' } }
+    }
+    return { error: null }
   }
 
   async function signOut() {

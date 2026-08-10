@@ -13,7 +13,10 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     const { error } = await signIn(email, password)
-    if (error) setError('Email o contraseña incorrectos')
+    if (error) {
+      if (error.message === 'CUENTA_INACTIVA') setError('Tu cuenta está desactivada. Contactá a un administrador.')
+      else setError('Email o contraseña incorrectos')
+    }
     setLoading(false)
   }
 

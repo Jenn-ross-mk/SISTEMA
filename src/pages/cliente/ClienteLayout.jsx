@@ -61,7 +61,7 @@ export default function ClienteLayout() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {profile?.rol === 'admin' && (
+          {(profile?.rol === 'admin' || profile?.rol === 'supervisor') && (
             <Link to="/admin" style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
               onMouseOver={e => e.currentTarget.style.color = 'white'}
               onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.75)'}

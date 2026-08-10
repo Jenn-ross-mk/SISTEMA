@@ -36,7 +36,7 @@ export default function AdminCotizaciones() {
     setCotizaciones(data || [])
 
     if (puedeVerTodo) {
-      const { data: v } = await supabase.from('profiles').select('id, nombre, localidad').order('nombre')
+      const { data: v } = await supabase.from('profiles').select('id, nombre, localidad, activo').order('nombre')
       setVendedores(v || [])
     }
     setLoading(false)
@@ -61,9 +61,10 @@ export default function AdminCotizaciones() {
     ? vendedores.filter(v => v.localidad === filtroLocalidad).map(v => v.id)
     : null
 
-  const vendedoresFiltrados = filtroLocalidad
+  const vendedoresFiltrados = (filtroLocalidad
     ? vendedores.filter(v => v.localidad === filtroLocalidad)
     : vendedores
+  ).filter(v => v.activo)
 
   const filtered = cotizaciones.filter(c => {
     const txt = `${c.cliente_nombre} ${c.vehiculo_descripcion} ${c.vendedor_nombre}`.toLowerCase()

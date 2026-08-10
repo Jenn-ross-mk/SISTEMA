@@ -17,6 +17,7 @@ export default function AdminVendedores() {
   const [form, setForm] = useState({ nombre: '', email: '', password: '', rol: 'vendedor', localidad: '' })
   const [error, setError] = useState('')
   const [editandoLocalidad, setEditandoLocalidad] = useState(null)
+  const [mostrarInactivos, setMostrarInactivos] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('profiles').select('*').order('nombre')
@@ -83,6 +84,9 @@ export default function AdminVendedores() {
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
 
+  const inactivosCount = vendedores.filter(v => !v.activo).length
+  const vendedoresVisibles = mostrarInactivos ? vendedores : vendedores.filter(v => v.activo)
+
   return (
     <div style={{ padding: '32px' }}>
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
@@ -92,12 +96,19 @@ export default function AdminVendedores() {
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>Vendedores</h1>
           <p style={{ color: '#8896a7', fontSize: '14px' }}>{vendedores.filter(v => v.rol === 'vendedor').length} vendedores · {vendedores.filter(v => v.rol === 'supervisor').length} supervisores · {vendedores.filter(v => v.rol === 'admin').length} admins</p>
         </div>
-        {!esSupervisor && (
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nuevo usuario
-        </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {inactivosCount > 0 && (
+            <button className="btn btn-ghost" onClick={() => setMostrarInactivos(prev => !prev)}>
+              {mostrarInactivos ? 'Ocultar inactivos' : `Mostrar inactivos (${inactivosCount})`}
+            </button>
+          )}
+          {!esSupervisor && (
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo usuario
+          </button>
+          )}
+        </div>
       </div>
 
       <div style={{ background: 'rgba(0,51,102,0.06)', border: '1px solid rgba(0,51,102,0.15)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: '#003366' }}>
@@ -105,7 +116,7 @@ export default function AdminVendedores() {
       </div>
 
       <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)' }}>
-        {vendedores.length === 0 ? (
+        {vendedoresVisibles.length === 0 ? (
           <div className="empty-state"><p>No hay usuarios registrados</p></div>
         ) : (
           <div className="table-wrap">
@@ -121,7 +132,7 @@ export default function AdminVendedores() {
                 </tr>
               </thead>
               <tbody>
-                {vendedores.map(v => (
+                {vendedoresVisibles.map(v => (
                   <tr key={v.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

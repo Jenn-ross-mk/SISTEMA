@@ -510,7 +510,7 @@ export default function AdminFormularios() {
     async function load() {
         const [{ data: f }, { data: v }, { data: c }] = await Promise.all([
             supabase.from('formularios').select('*').order('created_at', { ascending: false }),
-            supabase.from('profiles').select('id, nombre, localidad').order('nombre'),
+            supabase.from('profiles').select('id, nombre, localidad, activo').order('nombre'),
             supabase.from('cotizaciones').select('*').order('created_at', { ascending: false }),
         ])
         setFormularios(f || [])
@@ -540,9 +540,10 @@ export default function AdminFormularios() {
         load()
     }
 
-    const vendedoresFiltrados = filtroLocalidad
+    const vendedoresFiltrados = (filtroLocalidad
         ? vendedores.filter(v => v.localidad === filtroLocalidad)
         : vendedores
+    ).filter(v => v.activo)
 
     const filtered = formularios.filter(f => {
         const txt = `${f.apellido_nombre || ''} ${f.vendedor_nombre || ''} ${f.numero || ''} ${f.cotizacion_numero || ''}`.toLowerCase()
