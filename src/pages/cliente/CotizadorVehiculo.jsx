@@ -259,6 +259,9 @@ export default function CotizadorVehiculo() {
                 </div>
                 <div style={{ fontSize: '13px', color: '#4a5568' }}>{vehiculo.version}</div>
               </div>
+              {vehiculo.imagen_url && (
+                <img src={vehiculo.imagen_url} alt={vehiculo.modelo} style={{ height: '80px', width: '140px', objectFit: 'cover', borderRadius: '8px' }} />
+              )}
               <div>
                 <select className="form-select" value={provincia} onChange={e => setProvincia(e.target.value)} style={{ minWidth: '180px' }}>
                   <option value="">Seleccionar provincia</option>
@@ -306,13 +309,21 @@ export default function CotizadorVehiculo() {
             const montoNum = parseMonto(state.monto)
             const cuotasDelPlan = planesByNombre[nombrePlan] || []
             const isDisabled = false
+            const cuotaSeleccionada = cuotasDelPlan.find(p => p.id === state.cuotaId)
 
             if (isPrinting && montoNum <= 0) return null
 
             return (
               <div key={nombrePlan} style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec' }}>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
-                  {nombrePlan}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {nombrePlan}
+                  </div>
+                  {cuotaSeleccionada && (
+                    cuotaSeleccionada.tna === 0
+                      ? <span className="badge badge-green">TASA 0%</span>
+                      : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '12px' }}>
                   <div className="form-group" style={{ minWidth: '200px' }}>
