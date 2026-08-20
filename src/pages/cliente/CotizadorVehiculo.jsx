@@ -257,13 +257,17 @@ export default function CotizadorVehiculo() {
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: '#003366', lineHeight: 1 }}>
                   CHEVROLET {vehiculo.modelo?.toUpperCase()}
                 </div>
-                <div style={{ fontSize: '13px', color: '#4a5568' }}>{vehiculo.version}</div>
+                <div style={{ fontSize: '15px', color: '#4a5568', marginTop: '4px' }}>{vehiculo.version}</div>
               </div>
               {vehiculo.imagen_url && (
-                <img src={vehiculo.imagen_url} alt={vehiculo.modelo} style={{ height: '80px', width: '140px', objectFit: 'cover', borderRadius: '8px' }} />
+                <img src={vehiculo.imagen_url} alt={vehiculo.modelo} style={{ height: '90px', width: '160px', objectFit: 'cover', borderRadius: '8px' }} />
               )}
-              <div>
-                <select className="form-select" value={provincia} onChange={e => setProvincia(e.target.value)} style={{ minWidth: '180px' }}>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ minWidth: '280px' }}>
+                <label className="form-label">Precio base — Gastos CyO</label>
+                <select className="form-select" value={provincia} onChange={e => setProvincia(e.target.value)}>
                   <option value="">Seleccionar provincia</option>
                   <option value="chubut">Chubut — ${fmt(vehiculo.precio_chubut)}</option>
                   <option value="santacruz">Santa Cruz — ${fmt(vehiculo.precio_santacruz)}</option>
@@ -305,16 +309,26 @@ export default function CotizadorVehiculo() {
 
           {/* Planes de financiación */}
           {nombresPlanes.map(nombrePlan => {
+            const cuotasDelPlan = planesByNombre[nombrePlan]
             const state = planState[nombrePlan] || { monto: '', cuotaId: '' }
             const montoNum = parseMonto(state.monto)
-            const cuotasDelPlan = planesByNombre[nombrePlan] || []
-            const isDisabled = false
-            const cuotaSeleccionada = cuotasDelPlan.find(p => p.id === state.cuotaId)
+            const isActive = montoNum > 0
+            const isDisabled = planActivoNombre !== null && planActivoNombre !== nombrePlan
+            const cuotaSeleccionada = planes.find(p => p.id === state.cuotaId)
 
-            if (isPrinting && montoNum <= 0) return null
+            if (isPrinting && !isActive) return null
 
             return (
-              <div key={nombrePlan} style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec' }}>
+              <div
+                key={nombrePlan}
+                style={{
+                  padding: '16px 24px',
+                  borderBottom: '1px solid #e2e6ec',
+                  opacity: isDisabled ? 0.4 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                {/* Encabezado del plan */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {nombrePlan}
@@ -325,40 +339,40 @@ export default function CotizadorVehiculo() {
                       : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ minWidth: '200px' }}>
-                    <label className="form-label">Monto a financiar</label>
-                    {isPrinting
-                      ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
-                      : <input
-                          className="form-input"
-                          value={state.monto}
-                          onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
-                          placeholder="$ 0.00"
-                        />}
-                  </div>
+
+                {/* Monto a financiar */}
+                <div className="form-group" style={{ maxWidth: '220px', marginBottom: '14px' }}>
+                  <label className="form-label">Monto a financiar</label>
+                  {isPrinting
+                    ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
+                    : <input
+                        className="form-input"
+                        disabled={isDisabled}
+                        value={state.monto}
+                        onChange={e => handlePlanMontoChange(nombrePlan, e.target.value)}
+                        placeholder="$ 0.00"
+                      />
+                  }
                 </div>
 
-                {cuotasDelPlan.length > 4 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '8px' }}>
+                {/* Tarjetitas de cuotas */}
+                {isPrinting ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {cuotasDelPlan.map(p => {
                       const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
                       const isSelected = p.id === state.cuotaId
                       const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
-
                       return (
                         <div
                           key={p.id}
-                          onClick={() => !excede && handleCuotaChange(nombrePlan, p.id)}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1.5px solid #d1d8e0',
-                            background: isSelected ? '#003366' : 'white',
+                            border: isSelected ? '2px solid #003366' : '1px solid #e2e6ec',
+                            background: isSelected ? '#003366' : '#f8f9fb',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
-                            cursor: excede ? 'not-allowed' : 'pointer',
-                            opacity: excede ? 0.4 : 1,
-                            transition: 'all 0.15s',
+                            minWidth: '110px',
+                            opacity: excede ? 0.45 : 1,
                           }}
                         >
                           <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
