@@ -19,8 +19,27 @@ function fmt(n) {
   return (n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// Acepta "17.947.800,50", "17947800,50", "17947800.50" y "17947800".
+// Un único punto seguido de 1 o 2 dígitos al final se toma como decimal;
+// en cualquier otro caso los puntos son separadores de miles.
 function parseMonto(str) {
-  return parseFloat((str || '').replace(/\./g, '').replace(',', '.')) || 0
+  const s = String(str || '').replace(/[$\s]/g, '')
+  if (!s) return 0
+  if (s.includes(',')) {
+    return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
+  }
+  if (/^\d+\.\d{1,2}$/.test(s)) return parseFloat(s) || 0
+  return parseFloat(s.replace(/\./g, '')) || 0
+}
+
+// En planes a tasa 0% la cuota es exactamente monto / cuotas; el coeficiente
+// "cuota por millón" cargado en el admin suele estar redondeado (83333,
+// 55556...) y distorsiona el resultado. Para planes con interés se usa el
+// coeficiente informado por el banco.
+function calcularCuota(monto, plan) {
+  if (!plan || monto <= 0) return 0
+  if (Number(plan.tna) === 0 && plan.cuotas > 0) return monto / plan.cuotas
+  return (monto / UNIDAD_BASE) * (plan.valor_cuota_por_millon || 0)
 }
 
 function telefonoValido(str) {
@@ -107,10 +126,7 @@ export default function CotizadorVehiculo() {
     ? planes.find(p => p.id === planActivoState.cuotaId)
     : null
 
-  let valorCuota = 0
-  if (cuotaActivaRow && montoActivo > 0) {
-    valorCuota = (montoActivo / UNIDAD_BASE) * cuotaActivaRow.valor_cuota_por_millon
-  }
+  const valorCuota = calcularCuota(montoActivo, cuotaActivaRow)
 
   const quebrantoPct = cuotaActivaRow?.quebranto_pct || 0
   const quebranto = montoActivo * quebrantoPct * (1 + IVA_QUEBRANTO)
@@ -359,7 +375,7 @@ export default function CotizadorVehiculo() {
                 {isPrinting ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {cuotasDelPlan.map(p => {
-                      const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
+                      const cuotaVal = calcularCuota(montoNum, p)
                       const isSelected = p.id === state.cuotaId
                       const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
                       return (
@@ -393,7 +409,7 @@ export default function CotizadorVehiculo() {
                 ) : (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {cuotasDelPlan.map(p => {
-                      const cuotaVal = montoNum > 0 ? (montoNum / UNIDAD_BASE) * p.valor_cuota_por_millon : 0
+                      const cuotaVal = calcularCuota(montoNum, p)
                       const isSelected = p.id === state.cuotaId
                       const excede = montoNum > 0 && p.monto_maximo && montoNum > p.monto_maximo
 
