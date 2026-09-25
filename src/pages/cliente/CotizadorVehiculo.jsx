@@ -32,10 +32,13 @@ function parseMonto(str) {
   return parseFloat(s.replace(/\./g, '')) || 0
 }
 
-// Cuota según el coeficiente oficial "cuota cada $1.000.000" de la circular
-// comercial (incluye amortización, intereses e IVA sobre intereses).
+// En planes a tasa 0% la cuota es exactamente monto / cuotas, sin depender
+// del coeficiente "cuota por millón" (que viene redondeado o con errores,
+// ej. 41647 en lugar de 41666,67 a 24 cuotas). En planes con interés se usa
+// el coeficiente de la circular (incluye amortización, intereses e IVA).
 function calcularCuota(monto, plan) {
   if (!plan || monto <= 0) return 0
+  if (Number(plan.tna) === 0 && plan.cuotas > 0) return monto / plan.cuotas
   return (monto / UNIDAD_BASE) * (plan.valor_cuota_por_millon || 0)
 }
 
