@@ -32,13 +32,10 @@ function parseMonto(str) {
   return parseFloat(s.replace(/\./g, '')) || 0
 }
 
-// En planes a tasa 0% la cuota es exactamente monto / cuotas; el coeficiente
-// "cuota por millón" cargado en el admin suele estar redondeado (83333,
-// 55556...) y distorsiona el resultado. Para planes con interés se usa el
-// coeficiente informado por el banco.
+// Cuota según el coeficiente oficial "cuota cada $1.000.000" de la circular
+// comercial (incluye amortización, intereses e IVA sobre intereses).
 function calcularCuota(monto, plan) {
   if (!plan || monto <= 0) return 0
-  if (Number(plan.tna) === 0 && plan.cuotas > 0) return monto / plan.cuotas
   return (monto / UNIDAD_BASE) * (plan.valor_cuota_por_millon || 0)
 }
 
