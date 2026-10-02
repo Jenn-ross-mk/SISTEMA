@@ -93,7 +93,7 @@ export default function PlanAhorroIndex() {
                             >
                                 {/* Imagen */}
                                 {v.imagen_url ? (
-                                    <img src={v.imagen_url} alt="" style={{ width: '90px', height: '62px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                                    <img src={v.imagen_url} alt="" style={{ width: '90px', height: '62px', objectFit: 'contain', background: '#fff', borderRadius: '8px', flexShrink: 0 }} />
                                 ) : (
                                     <div style={{ width: '90px', height: '62px', background: '#f0f2f5', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8d0da" strokeWidth="1.5">
