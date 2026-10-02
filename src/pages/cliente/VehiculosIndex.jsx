@@ -147,7 +147,7 @@ export default function VehiculosIndex() {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,51,102,0.06)'
                   }}
                 >
-                  <div style={{ aspectRatio: '3 / 2', background: v.imagen_url ? '#fff' : '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div style={{ aspectRatio: '5 / 3', background: v.imagen_url ? '#fff' : '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {v.imagen_url ? (
                       <img src={v.imagen_url} alt={`${v.modelo} ${v.version}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
