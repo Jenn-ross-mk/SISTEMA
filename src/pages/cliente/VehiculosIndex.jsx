@@ -147,9 +147,9 @@ export default function VehiculosIndex() {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,51,102,0.06)'
                   }}
                 >
-                  <div style={{ height: '140px', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div style={{ height: '160px', background: v.imagen_url ? '#fff' : '#f0f2f5', padding: v.imagen_url ? '10px 12px 0' : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {v.imagen_url ? (
-                      <img src={v.imagen_url} alt={`${v.modelo} ${v.version}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={v.imagen_url} alt={`${v.modelo} ${v.version}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
                       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c8d0da" strokeWidth="1.2">
                         <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
