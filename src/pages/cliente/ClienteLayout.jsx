@@ -17,7 +17,8 @@ export default function ClienteLayout() {
   return (
     <div className={esCorporativo ? 'tema-corporativo' : undefined} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
       <header style={{
-        background: 'var(--navy)',
+        background: 'var(--header-bg)',
+        borderBottom: '2px solid var(--accent-line)',
         padding: '0 24px',
         height: '60px',
         display: 'flex',
@@ -103,7 +104,7 @@ export default function ClienteLayout() {
         <Outlet />
       </main>
 
-      <footer style={{ background: 'var(--navy)', padding: '14px 24px', textAlign: 'center' }}>
+      <footer style={{ background: 'var(--header-bg)', padding: '14px 24px', textAlign: 'center' }}>
         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2026 Akar Automotores. Todos los derechos reservados.</span>
       </footer>
     </div>

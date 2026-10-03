@@ -51,7 +51,8 @@ export default function VehiculosIndex({ canal = CANALES.convencional }) {
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
       {/* Hero */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%)',
+        background: 'var(--hero-bg)',
+        borderBottom: '3px solid var(--accent-line)',
         borderRadius: '16px',
         padding: '40px 48px',
         marginBottom: '36px',
@@ -65,11 +66,16 @@ export default function VehiculosIndex({ canal = CANALES.convencional }) {
             <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
           </svg>
         </div>
+        {canal.etiqueta && (
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#e3bc4a', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: '10px' }}>
+            {canal.etiqueta}
+          </div>
+        )}
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '36px', fontWeight: '700', marginBottom: '8px', letterSpacing: '0.03em' }}>
           {canal.titulo}
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', maxWidth: '500px' }}>
-          Seleccioná el vehículo, elegí la financiación y obtené el monto final de tus cuotas.
+          {canal.subtitulo}
         </p>
         <div style={{ marginTop: '24px', maxWidth: '400px' }}>
           <div style={{ position: 'relative' }}>

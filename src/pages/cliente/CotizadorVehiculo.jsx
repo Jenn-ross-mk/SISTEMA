@@ -237,7 +237,7 @@ export default function CotizadorVehiculo({ canal = CANALES.convencional }) {
 
       <div ref={printRef}>
         {/* Header con logo */}
-        <div style={{ background: 'var(--navy)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
+        <div style={{ background: 'var(--header-bg)', borderBottom: '2px solid var(--accent-line)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
           <img src="/logo-akar.png" alt="Akar Automotores" style={{ height: '64px' }} />
           <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
             {new Date().toLocaleDateString('es-AR')}

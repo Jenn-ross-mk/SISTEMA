@@ -4,6 +4,8 @@ export const CANALES = {
   convencional: {
     id: 'convencional',
     titulo: 'Cotizá tu 0km',
+    subtitulo: 'Seleccioná el vehículo, elegí la financiación y obtené el monto final de tus cuotas.',
+    etiqueta: '',
     nombreAdmin: 'Vehículos',
     tablaVehiculos: 'vehiculos',
     tablaPlanes: 'planes_financiacion',
@@ -15,6 +17,8 @@ export const CANALES = {
   corporativo: {
     id: 'corporativo',
     titulo: 'Ventas corporativas',
+    subtitulo: 'Cotizaciones para empresas, flotas y organismos.',
+    etiqueta: 'Akar · Área corporativa',
     nombreAdmin: 'Ventas corporativas',
     tablaVehiculos: 'corp_vehiculos',
     tablaPlanes: 'corp_planes_financiacion',
