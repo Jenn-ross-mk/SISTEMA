@@ -4,6 +4,13 @@ import { useAuth } from '../../context/AuthContext'
 
 const LOCALIDADES = ['Comodoro Rivadavia', 'Trelew', 'Puerto Madryn', 'Esquel']
 
+function tipoCotizacion(c) {
+  const plan = c.plan_nombre?.toLowerCase() || ''
+  if (plan.includes('plan de ahorro')) return 'plan_ahorro'
+  if (plan.startsWith('ventas corporativas')) return 'corporativo'
+  return 'convencional'
+}
+
 function fmt(n) {
   return (n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })
 }
@@ -73,12 +80,7 @@ export default function AdminCotizaciones() {
     if (filtroVendedor && c.vendedor_id !== filtroVendedor) return false
     if (filtroFechaDesde && c.created_at < filtroFechaDesde) return false
     if (filtroFechaHasta && c.created_at > filtroFechaHasta + 'T23:59:59') return false
-    if (filtroTipo === 'plan_ahorro') {
-      if (!c.plan_nombre?.toLowerCase().includes('plan de ahorro')) return false
-    }
-    if (filtroTipo === 'convencional') {
-      if (c.plan_nombre?.toLowerCase().includes('plan de ahorro')) return false
-    }
+    if (filtroTipo && tipoCotizacion(c) !== filtroTipo) return false
     return true
   })
 
@@ -117,6 +119,7 @@ export default function AdminCotizaciones() {
           <select className="form-select" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
             <option value="">Todos</option>
             <option value="convencional">Convencional</option>
+            <option value="corporativo">Ventas corporativas</option>
             <option value="plan_ahorro">Plan de Ahorro</option>
           </select>
         </div>
@@ -187,7 +190,7 @@ export default function AdminCotizaciones() {
                   <tbody>
                     {filtered.map(c => {
                       const vendedorInfo = vendedores.find(v => v.id === c.vendedor_id)
-                      const esPlanAhorro = c.plan_nombre?.toLowerCase().includes('plan de ahorro')
+                      const tipo = tipoCotizacion(c)
                       return (
                         <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor: 'pointer', background: selected?.id === c.id ? 'rgba(0,51,102,0.04)' : undefined }}>
                           <td style={{ fontSize: '13px', color: '#8896a7', whiteSpace: 'nowrap' }}>
@@ -198,9 +201,11 @@ export default function AdminCotizaciones() {
                           <td style={{ fontWeight: '500' }}>{c.cliente_nombre}</td>
                           <td style={{ fontSize: '13px', maxWidth: '180px' }}>{c.vehiculo_descripcion}</td>
                           <td>
-                            {esPlanAhorro
+                            {tipo === 'plan_ahorro'
                               ? <span className="badge badge-gold">Plan Ahorro</span>
-                              : <span className="badge badge-navy">Convencional</span>
+                              : tipo === 'corporativo'
+                                ? <span className="badge" style={{ background: '#0c2340', color: 'white' }}>Corporativa</span>
+                                : <span className="badge badge-navy">Convencional</span>
                             }
                           </td>
                           <td>

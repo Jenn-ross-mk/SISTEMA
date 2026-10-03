@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const NAV = [
@@ -12,6 +12,11 @@ const NAV = [
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
       <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+    </svg>
+  )},
+  { to: '/admin/corporativo', label: 'Ventas corporativas', adminOnly: true, icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
     </svg>
   )},
   { to: '/admin/vendedores', label: 'Vendedores', icon: (
@@ -47,6 +52,7 @@ const NAV = [
 export default function AdminLayout() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const esSupervisor = profile?.rol === 'supervisor'
   const navItems = NAV.filter(item => !(item.adminOnly && esSupervisor))
 
@@ -122,7 +128,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main style={{ flex: 1, overflow: 'auto', background: '#f8f9fb' }}>
+      <main className={location.pathname.startsWith('/admin/corporativo') ? 'tema-corporativo' : undefined} style={{ flex: 1, overflow: 'auto', background: '#f8f9fb' }}>
         <Outlet />
       </main>
     </div>

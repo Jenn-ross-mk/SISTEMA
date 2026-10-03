@@ -7,14 +7,17 @@ export default function ClienteLayout() {
 
   const navItems = [
     { to: '/', label: 'Cotizador', exact: true },
+    { to: '/corporativo', label: 'Ventas corporativas' },
     { to: '/formularios', label: 'Formularios' },
     { to: '/plan-ahorro', label: 'Plan de Ahorro' },
   ]
 
+  const esCorporativo = location.pathname.startsWith('/corporativo')
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
+    <div className={esCorporativo ? 'tema-corporativo' : undefined} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
       <header style={{
-        background: '#003366',
+        background: 'var(--navy)',
         padding: '0 24px',
         height: '60px',
         display: 'flex',
@@ -100,7 +103,7 @@ export default function ClienteLayout() {
         <Outlet />
       </main>
 
-      <footer style={{ background: '#003366', padding: '14px 24px', textAlign: 'center' }}>
+      <footer style={{ background: 'var(--navy)', padding: '14px 24px', textAlign: 'center' }}>
         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2026 Akar Automotores. Todos los derechos reservados.</span>
       </footer>
     </div>

@@ -16,6 +16,7 @@ import AdminCotizaciones from './pages/admin/AdminCotizaciones'
 import AdminFormularios from './pages/admin/AdminFormularios'
 import AdminPlanAhorro from './pages/admin/AdminPlanAhorro'
 import AdminPlanAhorroForm from './pages/admin/AdminPlanAhorroForm'
+import { CANALES } from './lib/canales'
 
 function PrivateRoute({ children, allowedRoles = null }) {
   const { user, profile, loading } = useAuth()
@@ -41,6 +42,8 @@ function AppRoutes() {
         <Route path="formularios" element={<FormulariosPage />} />
         <Route path="plan-ahorro" element={<PlanAhorroIndex />} />
         <Route path="plan-ahorro/:id" element={<CotizadorPlanAhorro />} />
+        <Route path="corporativo" element={<VehiculosIndex key="corporativo" canal={CANALES.corporativo} />} />
+        <Route path="corporativo/vehiculo/:id" element={<CotizadorVehiculo key="corporativo" canal={CANALES.corporativo} />} />
       </Route>
 
       <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'supervisor']}><AdminLayout /></PrivateRoute>}>
@@ -51,6 +54,9 @@ function AppRoutes() {
         <Route path="vendedores" element={<AdminVendedores />} />
         <Route path="cotizaciones" element={<AdminCotizaciones />} />
         <Route path="formularios" element={<AdminFormularios />} />
+        <Route path="corporativo" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculos key="corporativo" canal={CANALES.corporativo} /></PrivateRoute>} />
+        <Route path="corporativo/nuevo" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculoForm key="corporativo-nuevo" canal={CANALES.corporativo} /></PrivateRoute>} />
+        <Route path="corporativo/editar/:id" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculoForm key="corporativo-editar" canal={CANALES.corporativo} /></PrivateRoute>} />
         <Route path="plan-ahorro" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorro /></PrivateRoute>} />
         <Route path="plan-ahorro/nuevo" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorroForm /></PrivateRoute>} />
         <Route path="plan-ahorro/editar/:id" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorroForm /></PrivateRoute>} />

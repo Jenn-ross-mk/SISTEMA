@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { CANALES } from '../../lib/canales'
 
 const BANCOS = { chubut: 0.012, santacruz: 0.014 }
 const IVA_QUEBRANTO = 0.21
@@ -46,7 +47,7 @@ function telefonoValido(str) {
   return /^\d{8,10}$/.test(str || '')
 }
 
-export default function CotizadorVehiculo() {
+export default function CotizadorVehiculo({ canal = CANALES.convencional }) {
   const { id } = useParams()
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -75,8 +76,8 @@ export default function CotizadorVehiculo() {
   useEffect(() => {
     async function load() {
       const [{ data: v }, { data: p }] = await Promise.all([
-        supabase.from('vehiculos').select('*').eq('id', id).single(),
-        supabase.from('planes_financiacion')
+        supabase.from(canal.tablaVehiculos).select('*').eq('id', id).single(),
+        supabase.from(canal.tablaPlanes)
           .select('*')
           .eq('vehiculo_id', id)
           .eq('activo', true)
@@ -96,7 +97,7 @@ export default function CotizadorVehiculo() {
       setLoading(false)
     }
     load()
-  }, [id])
+  }, [id, canal])
 
   const planesByNombre = {}
   planes.forEach(p => {
@@ -160,15 +161,19 @@ export default function CotizadorVehiculo() {
         vendedor_nombre: vendedor || profile.nombre,
         cliente_nombre: cliente,
         telefono,
-        vehiculo_id: id,
+        // Los vehículos de otros canales viven en otra tabla: no pueden
+        // referenciarse con la FK de cotizaciones.vehiculo_id.
+        vehiculo_id: canal.prefijoPlan ? null : id,
         vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
         provincia,
         precio_base: precioBase,
         entrega_usado: entregaNum,
         descuento: descuentoNum,
-        plan_nombre: cuotaActivaRow
-          ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas`
-          : null,
+        plan_nombre: canal.prefijoPlan
+          ? `${canal.prefijoPlan} - ${cuotaActivaRow ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas` : 'Contado'}`
+          : cuotaActivaRow
+            ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas`
+            : null,
         monto_financiado: montoActivo,
         cuotas: cuotasActivas,
         valor_cuota: valorCuota,
@@ -225,14 +230,14 @@ export default function CotizadorVehiculo() {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
-      <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')} style={{ marginBottom: '20px' }}>
+      <button className="btn btn-ghost btn-sm" onClick={() => navigate(canal.basePath || '/')} style={{ marginBottom: '20px' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         Volver
       </button>
 
       <div ref={printRef}>
         {/* Header con logo */}
-        <div style={{ background: '#003366', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
+        <div style={{ background: 'var(--navy)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
           <img src="/logo-akar.png" alt="Akar Automotores" style={{ height: '64px' }} />
           <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
             {new Date().toLocaleDateString('es-AR')}
@@ -270,7 +275,7 @@ export default function CotizadorVehiculo() {
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '12px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Modelo</div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: '#003366', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: 'var(--navy)', lineHeight: 1 }}>
                   CHEVROLET {vehiculo.modelo?.toUpperCase()}
                 </div>
                 <div style={{ fontSize: '15px', color: '#4a5568', marginTop: '4px' }}>{vehiculo.version}</div>
@@ -292,7 +297,7 @@ export default function CotizadorVehiculo() {
               {precioBase > 0 && (
                 <div>
                   <div style={{ fontSize: '12px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Precio base</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#003366' }}>${fmt(precioBase)}</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--navy)' }}>${fmt(precioBase)}</div>
                 </div>
               )}
             </div>
@@ -301,7 +306,7 @@ export default function CotizadorVehiculo() {
           {/* Entrega / Descuento */}
           {(!isPrinting || entregaNum > 0 || descuentoNum > 0) && (
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Cliente</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Cliente</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               {(!isPrinting || entregaNum > 0) && (
               <div className="form-group">
@@ -346,7 +351,7 @@ export default function CotizadorVehiculo() {
               >
                 {/* Encabezado del plan */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {nombrePlan}
                   </div>
                   {cuotaSeleccionada && (
@@ -382,8 +387,8 @@ export default function CotizadorVehiculo() {
                         <div
                           key={p.id}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1px solid #e2e6ec',
-                            background: isSelected ? '#003366' : '#f8f9fb',
+                            border: isSelected ? '2px solid var(--navy)' : '1px solid #e2e6ec',
+                            background: isSelected ? 'var(--navy)' : '#f8f9fb',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
@@ -420,8 +425,8 @@ export default function CotizadorVehiculo() {
                           disabled={isDisabled || excede}
                           onClick={() => !excede && handleCuotaChange(nombrePlan, p.id)}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1.5px solid #d1d8e0',
-                            background: isSelected ? '#003366' : 'white',
+                            border: isSelected ? '2px solid var(--navy)' : '1.5px solid #d1d8e0',
+                            background: isSelected ? 'var(--navy)' : 'white',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
@@ -432,7 +437,7 @@ export default function CotizadorVehiculo() {
                           }}
                           onMouseOver={e => {
                             if (!isSelected && !excede && !isDisabled) {
-                              e.currentTarget.style.borderColor = '#003366'
+                              e.currentTarget.style.borderColor = 'var(--navy)'
                               e.currentTarget.style.background = '#f0f4fa'
                             }
                           }}
@@ -446,7 +451,7 @@ export default function CotizadorVehiculo() {
                           <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
                             {p.cuotas} cuotas
                           </div>
-                          <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'white' : (cuotaVal > 0 ? '#003366' : '#c0c8d0') }}>
+                          <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'white' : (cuotaVal > 0 ? 'var(--navy)' : '#c0c8d0') }}>
                             {cuotaVal > 0 ? `$${fmt(cuotaVal)}` : '—'}
                           </div>
                           {p.monto_maximo && (
@@ -466,7 +471,7 @@ export default function CotizadorVehiculo() {
           {/* Gastos bancarios */}
           {(!isPrinting || montoActivo > 0) && (
           <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <div className="form-group" style={{ minWidth: '200px' }}>
                 <label className="form-label">Banco</label>
@@ -495,7 +500,7 @@ export default function CotizadorVehiculo() {
           {/* Resumen + Observaciones */}
           <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Resumen</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Resumen</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[
                   ['Valor del vehículo', precioBase],
@@ -519,8 +524,8 @@ export default function CotizadorVehiculo() {
                     </span>
                   </div>
                 ))}
-                <div style={{ borderTop: '2px solid #003366', margin: '8px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '700', color: '#003366' }}>
+                <div style={{ borderTop: '2px solid var(--navy)', margin: '8px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '700', color: 'var(--navy)' }}>
                   <span>SALDO</span>
                   <span>${fmt(saldoEfectivo)}</span>
                 </div>
@@ -529,7 +534,7 @@ export default function CotizadorVehiculo() {
 
             {(!isPrinting || observaciones.trim()) && (
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Observaciones</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Observaciones</div>
               {isPrinting
                 ? <div style={{ fontSize: '14px', color: '#1a202c', whiteSpace: 'pre-wrap' }}>{observaciones}</div>
                 : <textarea

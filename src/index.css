@@ -24,6 +24,13 @@
   --shadow-md: 0 4px 24px rgba(0,51,102,0.12);
 }
 
+/* Sección Ventas corporativas: azul más oscuro */
+.tema-corporativo {
+  --navy: #0c2340;
+  --navy-dark: #071629;
+  --navy-light: #24406b;
+}
+
 html, body, #root { height: 100%; }
 
 body {

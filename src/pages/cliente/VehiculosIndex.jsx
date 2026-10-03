@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { CANALES } from '../../lib/canales'
 
 const MODELOS_ORDEN = ['ONIX','ONIX PLUS','TRACKER','SPIN','SPARK EUV','CAPTIVA','MONTANA','S10','SILVERADO','TRAILBLAZER','SONIC']
 
@@ -17,7 +18,7 @@ function groupByModelo(vehiculos) {
   return sorted
 }
 
-export default function VehiculosIndex() {
+export default function VehiculosIndex({ canal = CANALES.convencional }) {
   const [vehiculos, setVehiculos] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -26,7 +27,7 @@ export default function VehiculosIndex() {
   useEffect(() => {
     async function load() {
       const { data } = await supabase
-        .from('vehiculos')
+        .from(canal.tablaVehiculos)
         .select('*')
         .eq('activo', true)
         .order('orden', { ascending: true })
@@ -36,7 +37,7 @@ export default function VehiculosIndex() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [canal])
 
   const filtered = vehiculos.filter(v =>
     `${v.modelo} ${v.version}`.toLowerCase().includes(search.toLowerCase())
@@ -50,7 +51,7 @@ export default function VehiculosIndex() {
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
       {/* Hero */}
       <div style={{
-        background: 'linear-gradient(135deg, #003366 0%, #1a4d88 100%)',
+        background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%)',
         borderRadius: '16px',
         padding: '40px 48px',
         marginBottom: '36px',
@@ -65,7 +66,7 @@ export default function VehiculosIndex() {
           </svg>
         </div>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '36px', fontWeight: '700', marginBottom: '8px', letterSpacing: '0.03em' }}>
-          Cotizá tu 0km
+          {canal.titulo}
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', maxWidth: '500px' }}>
           Seleccioná el vehículo, elegí la financiación y obtené el monto final de tus cuotas.
@@ -111,7 +112,7 @@ export default function VehiculosIndex() {
         Object.entries(groups).map(([modelo, vehics]) => (
           <div key={modelo} style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '22px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '22px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {modelo}
               </h2>
               <div style={{ flex: 1, height: '1px', background: '#e2e6ec' }} />
@@ -124,7 +125,7 @@ export default function VehiculosIndex() {
               {vehics.map(v => (
                 <button
                   key={v.id}
-                  onClick={() => navigate(`/vehiculo/${v.id}`)}
+                  onClick={() => navigate(`${canal.basePath}/vehiculo/${v.id}`)}
                   style={{
                     background: 'white',
                     border: '1.5px solid #e2e6ec',
@@ -137,7 +138,7 @@ export default function VehiculosIndex() {
                     boxShadow: '0 2px 8px rgba(0,51,102,0.06)',
                   }}
                   onMouseOver={e => {
-                    e.currentTarget.style.borderColor = '#003366'
+                    e.currentTarget.style.borderColor = 'var(--navy)'
                     e.currentTarget.style.transform = 'translateY(-2px)'
                     e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,51,102,0.14)'
                   }}
@@ -167,11 +168,11 @@ export default function VehiculosIndex() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>desde</div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#003366' }}>
+                        <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--navy)' }}>
                           ${Math.min(v.precio_chubut || 0, v.precio_santacruz || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
                       </div>
-                      <div style={{ background: '#003366', color: 'white', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ background: 'var(--navy)', color: 'white', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         Cotizar
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path d="M5 12h14M12 5l7 7-7 7"/>

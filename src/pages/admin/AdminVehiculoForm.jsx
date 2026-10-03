@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { CANALES } from '../../lib/canales'
 
 const MARCAS = ['CHEVROLET']
 const MODELOS = ['ONIX','ONIX PLUS','TRACKER','SPIN','SPARK EUV','CAPTIVA','MONTANA','S10','SILVERADO','TRAILBLAZER','SONIC']
@@ -181,7 +182,7 @@ function PlanBlock({ plan, planIdx, onChange, onRemove, onAddCuota, onChangeCuot
 const CUOTA_EMPTY = { cuotas: 12, tna: 0, valor_cuota_por_millon: 0, monto_maximo: null, quebranto_pct: 0.11 }
 const PLAN_EMPTY = { nombre_plan: '', cuotas: [{ ...CUOTA_EMPTY }] }
 
-export default function AdminVehiculoForm() {
+export default function AdminVehiculoForm({ canal = CANALES.convencional }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditing = !!id
@@ -211,8 +212,8 @@ export default function AdminVehiculoForm() {
     if (!isEditing) return
     async function load() {
       const [{ data: v }, { data: p }] = await Promise.all([
-        supabase.from('vehiculos').select('*').eq('id', id).single(),
-        supabase.from('planes_financiacion').select('*').eq('vehiculo_id', id).order('nombre_plan').order('cuotas'),
+        supabase.from(canal.tablaVehiculos).select('*').eq('id', id).single(),
+        supabase.from(canal.tablaPlanes).select('*').eq('vehiculo_id', id).order('nombre_plan').order('cuotas'),
       ])
       if (v) {
         // Calculamos gastos desde precios almacenados
@@ -252,7 +253,7 @@ export default function AdminVehiculoForm() {
       setLoading(false)
     }
     load()
-  }, [id, isEditing])
+  }, [id, isEditing, canal])
 
   // --- Handlers de planes ---
   function addPlan() {
@@ -331,11 +332,11 @@ export default function AdminVehiculoForm() {
 
       let vehiculoId = id
       if (isEditing) {
-        await supabase.from('vehiculos').update(vehiculoData).eq('id', id)
+        await supabase.from(canal.tablaVehiculos).update(vehiculoData).eq('id', id)
         // Borrar todos los planes existentes y re-insertar
-        await supabase.from('planes_financiacion').delete().eq('vehiculo_id', id)
+        await supabase.from(canal.tablaPlanes).delete().eq('vehiculo_id', id)
       } else {
-        const { data } = await supabase.from('vehiculos').insert(vehiculoData).select().single()
+        const { data } = await supabase.from(canal.tablaVehiculos).insert(vehiculoData).select().single()
         vehiculoId = data.id
       }
 
@@ -358,11 +359,11 @@ export default function AdminVehiculoForm() {
         })
       })
       if (rowsToInsert.length > 0) {
-        await supabase.from('planes_financiacion').insert(rowsToInsert)
+        await supabase.from(canal.tablaPlanes).insert(rowsToInsert)
       }
 
       showToast(isEditing ? 'Vehículo actualizado' : 'Vehículo creado')
-      setTimeout(() => navigate('/admin/vehiculos'), 1500)
+      setTimeout(() => navigate(canal.adminPath), 1500)
     } catch (err) {
       console.error(err)
       showToast('Error: ' + err.message, 'error')
@@ -377,12 +378,13 @@ export default function AdminVehiculoForm() {
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
 
       <div style={{ marginBottom: '24px' }}>
-        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/admin/vehiculos')} style={{ marginBottom: '12px' }}>
+        <button className="btn btn-ghost btn-sm" onClick={() => navigate(canal.adminPath)} style={{ marginBottom: '12px' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Volver
         </button>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366' }}>
+        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: 'var(--navy)' }}>
           {isEditing ? 'Editar vehículo' : 'Nuevo vehículo'}
+          {canal.prefijoPlan && <span style={{ fontSize: '16px', color: 'var(--gray-500)', fontWeight: '600', marginLeft: '10px' }}>· {canal.nombreAdmin}</span>}
         </h1>
       </div>
 
@@ -390,7 +392,7 @@ export default function AdminVehiculoForm() {
 
         {/* DATOS DEL VEHÍCULO */}
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--gray-200)', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366', marginBottom: '18px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: 'var(--navy)', marginBottom: '18px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Datos del vehículo
           </h2>
 
@@ -416,7 +418,7 @@ export default function AdminVehiculoForm() {
 
           {/* Precios */}
           <div style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
               Precios
             </div>
             <div className="grid-3" style={{ marginBottom: '12px' }}>
@@ -437,11 +439,11 @@ export default function AdminVehiculoForm() {
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '13px', color: 'var(--gray-700)' }}>
                   <span style={{ color: 'var(--gray-500)' }}>Total Chubut: </span>
-                  <strong style={{ color: '#003366' }}>${precioTotalChubut.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong>
+                  <strong style={{ color: 'var(--navy)' }}>${precioTotalChubut.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong>
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--gray-700)' }}>
                   <span style={{ color: 'var(--gray-500)' }}>Total Santa Cruz: </span>
-                  <strong style={{ color: '#003366' }}>${precioTotalSantaCruz.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong>
+                  <strong style={{ color: 'var(--navy)' }}>${precioTotalSantaCruz.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong>
                 </div>
               </div>
             )}
@@ -461,7 +463,7 @@ export default function AdminVehiculoForm() {
 
         {/* IMAGEN */}
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--gray-200)', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366', marginBottom: '18px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: 'var(--navy)', marginBottom: '18px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Imagen
           </h2>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
@@ -492,7 +494,7 @@ export default function AdminVehiculoForm() {
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--gray-200)', padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div>
-              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Planes de financiación
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--gray-500)', marginTop: '2px' }}>
@@ -534,7 +536,7 @@ export default function AdminVehiculoForm() {
 
         {/* ACCIONES */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn btn-ghost" onClick={() => navigate('/admin/vehiculos')}>Cancelar</button>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(canal.adminPath)}>Cancelar</button>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving
               ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white' }} /> Guardando...</>
