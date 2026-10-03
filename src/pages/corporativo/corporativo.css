@@ -1,0 +1,85 @@
+/* Sección Ventas corporativas: azul noche en degradé con detalle dorado.
+   Todo queda dentro de .tema-corporativo para no afectar otras pestañas. */
+.tema-corporativo {
+  --navy: #0a1c33;
+  --navy-dark: #050d1a;
+  --navy-light: #1b3a66;
+  --header-bg: linear-gradient(90deg, #040a14 0%, #0a1c33 55%, #142f55 100%);
+  --hero-bg: linear-gradient(135deg, #040a14 0%, #0a1c33 50%, #1d3f6e 100%);
+  --accent-line: rgba(212, 160, 23, 0.85);
+}
+
+.tema-corporativo .corp-titulo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.tema-corporativo .corp-cantidad {
+  display: flex;
+  align-items: stretch;
+  width: 140px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: white;
+}
+.tema-corporativo .corp-cantidad button {
+  width: 40px;
+  border: none;
+  background: var(--gray-100);
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tema-corporativo .corp-cantidad button:hover { background: var(--gray-200); }
+.tema-corporativo .corp-cantidad input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-main);
+  color: var(--gray-900);
+  padding: 9px 0;
+  outline: none;
+}
+
+.tema-corporativo .corp-flota {
+  margin-top: 14px;
+  background: var(--header-bg);
+  color: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border-left: 3px solid #d4a017;
+}
+.tema-corporativo .corp-flota-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e3bc4a;
+  margin-bottom: 8px;
+}
+.tema-corporativo .corp-flota-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 4px 0;
+}
+.tema-corporativo .corp-flota-fila span { color: rgba(255, 255, 255, 0.8); }
+.tema-corporativo .corp-flota-fila b { color: white; }
+.tema-corporativo .corp-flota-fila small { display: block; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+.tema-corporativo .corp-flota-cuota {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  margin-top: 6px;
+  padding-top: 10px;
+}
+.tema-corporativo .corp-flota-cuota b { font-size: 22px; }

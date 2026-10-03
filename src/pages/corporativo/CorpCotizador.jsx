@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { CORP as canal } from './config'
+import './corporativo.css'
 
 const BANCOS = { chubut: 0.012, santacruz: 0.014 }
 const IVA_QUEBRANTO = 0.21
@@ -36,17 +38,45 @@ function parseMonto(str) {
 // del coeficiente "cuota por millón" (que viene redondeado o con errores,
 // ej. 41647 en lugar de 41666,67 a 24 cuotas). En planes con interés se usa
 // el coeficiente de la circular (incluye amortización, intereses e IVA).
+//
+// En ventas corporativas el coeficiente es opcional: si no está cargado, la
+// cuota también es monto / cuotas. Además se le suma el IVA del plan, si tiene.
 function calcularCuota(monto, plan) {
   if (!plan || monto <= 0) return 0
-  if (Number(plan.tna) === 0 && plan.cuotas > 0) return monto / plan.cuotas
-  return (monto / UNIDAD_BASE) * (plan.valor_cuota_por_millon || 0)
+  let cuota
+  if (plan.cuotas > 0 && (Number(plan.tna) === 0 || !Number(plan.valor_cuota_por_millon))) cuota = monto / plan.cuotas
+  else cuota = (monto / UNIDAD_BASE) * (plan.valor_cuota_por_millon || 0)
+  if (Number(plan.iva_pct) > 0) cuota *= 1 + Number(plan.iva_pct)
+  return cuota
 }
+
+// CUIT: 11 dígitos con dígito verificador (módulo 11).
+function cuitValido(str) {
+  const d = String(str || '').replace(/\D/g, '')
+  if (d.length !== 11) return false
+  const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+  const suma = pesos.reduce((s, p, i) => s + p * Number(d[i]), 0)
+  let verif = 11 - (suma % 11)
+  if (verif === 11) verif = 0
+  if (verif === 10) return false
+  return verif === Number(d[10])
+}
+
+function formatearCuit(str) {
+  const d = String(str || '').replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d
+  if (d.length <= 10) return `${d.slice(0, 2)}-${d.slice(2)}`
+  return `${d.slice(0, 2)}-${d.slice(2, 10)}-${d.slice(10)}`
+}
+
+const DIAS_VALIDEZ = 5
+const CONDICIONES_DEFAULT = '• Forma de pago: saldo contra entrega, transferencia bancaria.\n• Plazo de entrega estimado: a confirmar.\n• Precios sujetos a modificación por parte de la fábrica.'
 
 function telefonoValido(str) {
   return /^\d{8,10}$/.test(str || '')
 }
 
-export default function CotizadorVehiculo() {
+export default function CorpCotizador() {
   const { id } = useParams()
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -58,13 +88,27 @@ export default function CotizadorVehiculo() {
   const [saving, setSaving] = useState(false)
 
   const [vendedor, setVendedor] = useState('')
-  const [cliente, setCliente] = useState('')
+  const [razonSocial, setRazonSocial] = useState('')
+  const [cuit, setCuit] = useState('')
+  const [contacto, setContacto] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [email, setEmail] = useState('')
   const [provincia, setProvincia] = useState('')
-  const [entregaUsado, setEntregaUsado] = useState('')
+  const [cantidad, setCantidad] = useState(1)
   const [descuento, setDescuento] = useState('')
   const [banco, setBanco] = useState('chubut')
-  const [observaciones, setObservaciones] = useState('')
+  const [observaciones, setObservaciones] = useState(CONDICIONES_DEFAULT)
+  const [propuesta] = useState(() => {
+    const ahora = new Date()
+    const pad = n => String(n).padStart(2, '0')
+    const vence = new Date(ahora)
+    vence.setDate(vence.getDate() + DIAS_VALIDEZ)
+    return {
+      numero: `PC-${String(ahora.getFullYear()).slice(2)}${pad(ahora.getMonth() + 1)}${pad(ahora.getDate())}-${pad(ahora.getHours())}${pad(ahora.getMinutes())}`,
+      emitida: ahora.toLocaleDateString('es-AR'),
+      vence: vence.toLocaleDateString('es-AR'),
+    }
+  })
   const [planState, setPlanState] = useState({})
   const [isPrinting, setIsPrinting] = useState(false)
 
@@ -75,8 +119,8 @@ export default function CotizadorVehiculo() {
   useEffect(() => {
     async function load() {
       const [{ data: v }, { data: p }] = await Promise.all([
-        supabase.from('vehiculos').select('*').eq('id', id).single(),
-        supabase.from('planes_financiacion')
+        supabase.from(canal.tablaVehiculos).select('*').eq('id', id).single(),
+        supabase.from(canal.tablaPlanes)
           .select('*')
           .eq('vehiculo_id', id)
           .eq('activo', true)
@@ -115,7 +159,7 @@ export default function CotizadorVehiculo() {
       ? (vehiculo?.precio_santacruz || 0)
       : 0
 
-  const entregaNum = parseMonto(entregaUsado)
+  const entregaNum = 0
   const descuentoNum = parseMonto(descuento)
 
   const planActivoNombre = nombresPlanes.find(nombre => parseMonto(planState[nombre]?.monto) > 0) || null
@@ -136,6 +180,12 @@ export default function CotizadorVehiculo() {
   const gastosBancarios = quebranto + sellado
   const saldoEfectivo = precioBase + gastosBancarios - entregaNum - montoActivo - descuentoNum
 
+  // Flota: cada unidad se cotiza igual y los totales se multiplican.
+  const unidades = Math.max(1, parseInt(cantidad) || 1)
+  const esFlota = unidades > 1
+  const cuitOk = cuitValido(cuit)
+  const puedeGuardar = razonSocial.trim() && cuitOk && provincia && telefonoValido(telefono)
+
   function handlePlanMontoChange(nombrePlan, value) {
     setPlanState(prev => ({
       ...prev,
@@ -151,24 +201,24 @@ export default function CotizadorVehiculo() {
   }
 
   async function handleSave() {
-    if (!cliente || !provincia || !telefonoValido(telefono) || !profile) return
+    if (!puedeGuardar || !profile) return
     if (saving) return
     setSaving(true)
     try {
       const { error } = await supabase.from('cotizaciones').insert({
         vendedor_id: profile.id,
         vendedor_nombre: vendedor || profile.nombre,
-        cliente_nombre: cliente,
+        cliente_nombre: `${razonSocial.trim()} (CUIT ${formatearCuit(cuit)})`,
         telefono,
-        vehiculo_id: id,
-        vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}`,
+        // Los vehículos corporativos viven en otra tabla: no pueden
+        // referenciarse con la FK de cotizaciones.vehiculo_id.
+        vehiculo_id: null,
+        vehiculo_descripcion: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.version}${esFlota ? ` × ${unidades} unidades` : ''}`,
         provincia,
         precio_base: precioBase,
         entrega_usado: entregaNum,
         descuento: descuentoNum,
-        plan_nombre: cuotaActivaRow
-          ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas`
-          : null,
+        plan_nombre: `${canal.prefijoPlan} - ${cuotaActivaRow ? `${cuotaActivaRow.nombre_plan} - ${cuotaActivaRow.cuotas} cuotas` : 'Contado'}`,
         monto_financiado: montoActivo,
         cuotas: cuotasActivas,
         valor_cuota: valorCuota,
@@ -217,60 +267,101 @@ export default function CotizadorVehiculo() {
       pdf.addImage(imgData, 'PNG', margin, margin, usableW, imgH)
       yOffset += sliceH
     }
-    pdf.save(`${cliente || 'cotizacion'}.pdf`)
+    pdf.save(`Propuesta ${propuesta.numero} - ${razonSocial.trim() || 'empresa'}.pdf`)
   }
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
   if (!vehiculo) return <div className="loading-center"><p>Vehículo no encontrado</p></div>
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
-      <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')} style={{ marginBottom: '20px' }}>
+    <div className="tema-corporativo" style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
+      <button className="btn btn-ghost btn-sm" onClick={() => navigate(canal.basePath)} style={{ marginBottom: '20px' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         Volver
       </button>
 
       <div ref={printRef}>
         {/* Header con logo */}
-        <div style={{ background: '#003366', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
+        <div style={{ background: 'var(--header-bg)', borderBottom: '2px solid var(--accent-line)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '12px 12px 0 0' }}>
           <img src="/logo-akar.png" alt="Akar Automotores" style={{ height: '64px' }} />
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
-            {new Date().toLocaleDateString('es-AR')}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: '700', color: '#e3bc4a', textTransform: 'uppercase', letterSpacing: '0.14em' }}>Propuesta comercial</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '24px', fontWeight: '700', color: 'white', letterSpacing: '0.04em' }}>N° {propuesta.numero}</div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>Emitida {propuesta.emitida} · Válida hasta {propuesta.vence}</div>
           </div>
         </div>
 
         <div style={{ background: 'white', border: '1px solid #e2e6ec', borderTop: 'none', borderRadius: '0 0 12px 12px', overflow: 'hidden' }}>
 
-          {/* Vendedor / Cliente / Teléfono */}
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-            <div className="form-group">
-              <label className="form-label">Vendedor</label>
-              <input className="form-input" value={vendedor} onChange={e => setVendedor(e.target.value)} placeholder="Nombre del vendedor" />
+          {/* Empresa */}
+          {isPrinting ? (
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div>
+                <div className="corp-titulo">Para</div>
+                <div style={{ fontSize: '17px', fontWeight: '700', color: '#1a202c' }}>{razonSocial}</div>
+                <div style={{ fontSize: '13px', color: '#8896a7' }}>CUIT {formatearCuit(cuit)}</div>
+                {contacto && <div style={{ fontSize: '13px', color: '#8896a7', marginTop: '6px' }}>At. {contacto}</div>}
+                <div style={{ fontSize: '13px', color: '#8896a7' }}>{[telefono, email].filter(Boolean).join(' · ')}</div>
+              </div>
+              <div>
+                <div className="corp-titulo">Ejecutivo de cuentas</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#1a202c' }}>{vendedor}</div>
+                <div style={{ fontSize: '13px', color: '#8896a7' }}>Ventas corporativas · Akar Automotores</div>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Cliente</label>
-              <input className="form-input" value={cliente} onChange={e => setCliente(e.target.value)} placeholder="Nombre del cliente" />
+          ) : (
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec' }}>
+              <div className="corp-titulo">Empresa</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">Razón social *</label>
+                  <input className="form-input" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Nombre de la empresa" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">CUIT *</label>
+                  <input className="form-input" inputMode="numeric" value={cuit} onChange={e => setCuit(formatearCuit(e.target.value))} placeholder="30-12345678-9" />
+                  {cuit.replace(/\D/g, '').length === 11 && (
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: cuitOk ? '#1a7a4a' : '#c0392b' }}>
+                      {cuitOk ? '✓ CUIT válido' : 'CUIT inválido, revisá los números'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Contacto</label>
+                  <input className="form-input" value={contacto} onChange={e => setContacto(e.target.value)} placeholder="Nombre y área" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Teléfono *</label>
+                  <input
+                    className="form-input"
+                    type="tel"
+                    inputMode="numeric"
+                    value={telefono}
+                    onChange={e => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="Ej: 2974123456"
+                    maxLength={10}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="compras@empresa.com" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Ejecutivo de cuentas</label>
+                  <input className="form-input" value={vendedor} onChange={e => setVendedor(e.target.value)} placeholder="Nombre del vendedor" />
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Teléfono *</label>
-              <input
-                className="form-input"
-                type="tel"
-                inputMode="numeric"
-                value={telefono}
-                onChange={e => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                placeholder="Ej: 2974123456"
-                maxLength={10}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Vehículo + Precio base */}
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec' }}>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '12px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Modelo</div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: '#003366', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '26px', fontWeight: '700', color: 'var(--navy)', lineHeight: 1 }}>
                   CHEVROLET {vehiculo.modelo?.toUpperCase()}
                 </div>
                 <div style={{ fontSize: '15px', color: '#4a5568', marginTop: '4px' }}>{vehiculo.version}</div>
@@ -292,33 +383,39 @@ export default function CotizadorVehiculo() {
               {precioBase > 0 && (
                 <div>
                   <div style={{ fontSize: '12px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Precio base</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#003366' }}>${fmt(precioBase)}</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--navy)' }}>${fmt(precioBase)}</div>
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label">Cantidad de unidades</label>
+                {isPrinting
+                  ? <div style={{ fontSize: '18px', fontWeight: '700', color: '#1a202c' }}>{unidades}</div>
+                  : (
+                    <div className="corp-cantidad">
+                      <button type="button" onClick={() => setCantidad(Math.max(1, unidades - 1))}>−</button>
+                      <input value={cantidad} inputMode="numeric" onChange={e => setCantidad(e.target.value.replace(/\D/g, '').slice(0, 3))} onBlur={() => setCantidad(unidades)} />
+                      <button type="button" onClick={() => setCantidad(unidades + 1)}>+</button>
+                    </div>
+                  )}
+              </div>
+              {esFlota && precioBase > 0 && (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total flota</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--navy)' }}>${fmt(precioBase * unidades)}</div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Entrega / Descuento */}
-          {(!isPrinting || entregaNum > 0 || descuentoNum > 0) && (
+          {/* Bonificación */}
+          {(!isPrinting || descuentoNum > 0) && (
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Cliente</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              {(!isPrinting || entregaNum > 0) && (
-              <div className="form-group">
-                <label className="form-label">Entrega de usado</label>
-                {isPrinting
-                  ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(entregaNum)}</div>
-                  : <input className="form-input" value={entregaUsado} onChange={e => setEntregaUsado(e.target.value)} placeholder="$ 0.00" />}
-              </div>
-              )}
-              {(!isPrinting || descuentoNum > 0) && (
-              <div className="form-group">
-                <label className="form-label">Descuento (si aplica)</label>
-                {isPrinting
-                  ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(descuentoNum)}</div>
-                  : <input className="form-input" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="$ 0.00" />}
-              </div>
-              )}
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Bonificación</div>
+            <div className="form-group" style={{ maxWidth: '300px' }}>
+              <label className="form-label">Descuento por unidad (si aplica)</label>
+              {isPrinting
+                ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(descuentoNum)}</div>
+                : <input className="form-input" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="$ 0.00" />}
             </div>
           </div>
           )}
@@ -346,19 +443,24 @@ export default function CotizadorVehiculo() {
               >
                 {/* Encabezado del plan */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {nombrePlan}
                   </div>
                   {cuotaSeleccionada && (
-                    cuotaSeleccionada.tna === 0
-                      ? <span className="badge badge-green">TASA 0%</span>
-                      : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {cuotaSeleccionada.tna === 0
+                        ? <span className="badge badge-green">TASA 0%</span>
+                        : <span className="badge badge-navy">TNA {cuotaSeleccionada.tna}%</span>}
+                      {Number(cuotaSeleccionada.iva_pct) > 0 && (
+                        <span className="badge badge-navy">+ IVA {parseFloat((cuotaSeleccionada.iva_pct * 100).toFixed(2))}%</span>
+                      )}
+                    </div>
                   )}
                 </div>
 
                 {/* Monto a financiar */}
-                <div className="form-group" style={{ maxWidth: '220px', marginBottom: '14px' }}>
-                  <label className="form-label">Monto a financiar</label>
+                <div className="form-group" style={{ maxWidth: '260px', marginBottom: '14px' }}>
+                  <label className="form-label">Monto a financiar por unidad</label>
                   {isPrinting
                     ? <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a202c' }}>${fmt(montoNum)}</div>
                     : <input
@@ -382,8 +484,8 @@ export default function CotizadorVehiculo() {
                         <div
                           key={p.id}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1px solid #e2e6ec',
-                            background: isSelected ? '#003366' : '#f8f9fb',
+                            border: isSelected ? '2px solid var(--navy)' : '1px solid #e2e6ec',
+                            background: isSelected ? 'var(--navy)' : '#f8f9fb',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
@@ -420,8 +522,8 @@ export default function CotizadorVehiculo() {
                           disabled={isDisabled || excede}
                           onClick={() => !excede && handleCuotaChange(nombrePlan, p.id)}
                           style={{
-                            border: isSelected ? '2px solid #003366' : '1.5px solid #d1d8e0',
-                            background: isSelected ? '#003366' : 'white',
+                            border: isSelected ? '2px solid var(--navy)' : '1.5px solid #d1d8e0',
+                            background: isSelected ? 'var(--navy)' : 'white',
                             borderRadius: '8px',
                             padding: '10px 14px',
                             textAlign: 'center',
@@ -432,7 +534,7 @@ export default function CotizadorVehiculo() {
                           }}
                           onMouseOver={e => {
                             if (!isSelected && !excede && !isDisabled) {
-                              e.currentTarget.style.borderColor = '#003366'
+                              e.currentTarget.style.borderColor = 'var(--navy)'
                               e.currentTarget.style.background = '#f0f4fa'
                             }
                           }}
@@ -446,7 +548,7 @@ export default function CotizadorVehiculo() {
                           <div style={{ fontSize: '12px', fontWeight: '600', color: isSelected ? 'rgba(255,255,255,0.75)' : '#8896a7', marginBottom: '4px' }}>
                             {p.cuotas} cuotas
                           </div>
-                          <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'white' : (cuotaVal > 0 ? '#003366' : '#c0c8d0') }}>
+                          <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'white' : (cuotaVal > 0 ? 'var(--navy)' : '#c0c8d0') }}>
                             {cuotaVal > 0 ? `$${fmt(cuotaVal)}` : '—'}
                           </div>
                           {p.monto_maximo && (
@@ -466,7 +568,7 @@ export default function CotizadorVehiculo() {
           {/* Gastos bancarios */}
           {(!isPrinting || montoActivo > 0) && (
           <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e6ec', background: '#f8f9fb' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>Gastos bancarios</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <div className="form-group" style={{ minWidth: '200px' }}>
                 <label className="form-label">Banco</label>
@@ -495,7 +597,7 @@ export default function CotizadorVehiculo() {
           {/* Resumen + Observaciones */}
           <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Resumen</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Resumen</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[
                   ['Valor del vehículo', precioBase],
@@ -519,24 +621,39 @@ export default function CotizadorVehiculo() {
                     </span>
                   </div>
                 ))}
-                <div style={{ borderTop: '2px solid #003366', margin: '8px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '700', color: '#003366' }}>
+                <div style={{ borderTop: '2px solid var(--navy)', margin: '8px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '700', color: 'var(--navy)' }}>
                   <span>SALDO</span>
                   <span>${fmt(saldoEfectivo)}</span>
                 </div>
+                {esFlota && (
+                  <div className="corp-flota">
+                    <div className="corp-flota-titulo">Total flota · {unidades} unidades</div>
+                    <div className="corp-flota-fila"><span>Saldo total</span><b>${fmt(saldoEfectivo * unidades)}</b></div>
+                    {montoActivo > 0 && (
+                      <>
+                        <div className="corp-flota-fila"><span>Monto financiado total</span><b>${fmt(montoActivo * unidades)}</b></div>
+                        <div className="corp-flota-fila corp-flota-cuota">
+                          <span>Cuota mensual total<small>{cuotasActivas} cuotas · {unidades} × ${fmt(valorCuota)}</small></span>
+                          <b>${fmt(valorCuota * unidades)}</b>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             {(!isPrinting || observaciones.trim()) && (
             <div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Observaciones</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', fontWeight: '700', color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>Condiciones comerciales</div>
               {isPrinting
                 ? <div style={{ fontSize: '14px', color: '#1a202c', whiteSpace: 'pre-wrap' }}>{observaciones}</div>
                 : <textarea
                     className="form-textarea"
                     value={observaciones}
                     onChange={e => setObservaciones(e.target.value)}
-                    placeholder="Notas adicionales para esta cotización..."
+                    placeholder="Forma de pago, plazo de entrega, etc."
                     style={{ minHeight: '150px', width: '100%', resize: 'vertical' }}
                   />
               }
@@ -545,7 +662,7 @@ export default function CotizadorVehiculo() {
           </div>
 
           <div style={{ padding: '10px 24px 20px', color: '#8896a7', fontSize: '12px', borderTop: '1px solid #e2e6ec' }}>
-            Presupuesto válido por 5 días
+            Propuesta válida hasta el {propuesta.vence}
           </div>
         </div>
       </div>
@@ -555,11 +672,11 @@ export default function CotizadorVehiculo() {
         <button
           className="btn btn-primary"
           onClick={handlePDF}
-          disabled={!cliente || !provincia || !telefonoValido(telefono) || saving}
+          disabled={!puedeGuardar || saving}
         >
           {saving
             ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white' }} /> Guardando...</>
-            : <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar PDF</>
+            : <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar propuesta PDF</>
           }
         </button>
       </div>

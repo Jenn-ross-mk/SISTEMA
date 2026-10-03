@@ -22,19 +22,6 @@
   --radius-sm: 6px;
   --shadow: 0 2px 12px rgba(0,51,102,0.08);
   --shadow-md: 0 4px 24px rgba(0,51,102,0.12);
-  --header-bg: var(--navy);
-  --hero-bg: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
-  --accent-line: transparent;
-}
-
-/* Sección Ventas corporativas: azul noche en degradé con detalle dorado */
-.tema-corporativo {
-  --navy: #0a1c33;
-  --navy-dark: #050d1a;
-  --navy-light: #1b3a66;
-  --header-bg: linear-gradient(90deg, #040a14 0%, #0a1c33 55%, #142f55 100%);
-  --hero-bg: linear-gradient(135deg, #040a14 0%, #0a1c33 50%, #1d3f6e 100%);
-  --accent-line: rgba(212,160,23,0.85);
 }
 
 html, body, #root { height: 100%; }

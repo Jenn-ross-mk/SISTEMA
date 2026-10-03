@@ -7,18 +7,20 @@ export default function ClienteLayout() {
 
   const navItems = [
     { to: '/', label: 'Cotizador', exact: true },
-    { to: '/corporativo', label: 'Ventas corporativas' },
     { to: '/formularios', label: 'Formularios' },
     { to: '/plan-ahorro', label: 'Plan de Ahorro' },
+    { to: '/corporativo', label: 'Ventas corporativas' },
   ]
 
+  // En Ventas corporativas el encabezado cambia a azul noche con detalle dorado.
   const esCorporativo = location.pathname.startsWith('/corporativo')
+  const fondoCorporativo = 'linear-gradient(90deg, #040a14 0%, #0a1c33 55%, #142f55 100%)'
 
   return (
-    <div className={esCorporativo ? 'tema-corporativo' : undefined} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8f9fb' }}>
       <header style={{
-        background: 'var(--header-bg)',
-        borderBottom: '2px solid var(--accent-line)',
+        background: esCorporativo ? fondoCorporativo : '#003366',
+        ...(esCorporativo && { borderBottom: '2px solid rgba(212,160,23,0.85)' }),
         padding: '0 24px',
         height: '60px',
         display: 'flex',
@@ -39,6 +41,12 @@ export default function ClienteLayout() {
               AKAR
             </span>
           </Link>
+
+          {esCorporativo && (
+            <span style={{ color: '#e3bc4a', fontSize: '11px', fontWeight: '700', letterSpacing: '0.16em', textTransform: 'uppercase', border: '1px solid rgba(227,188,74,0.5)', borderRadius: '4px', padding: '4px 8px', whiteSpace: 'nowrap' }}>
+              Exclusivo para empresas
+            </span>
+          )}
 
           <nav style={{ display: 'flex', gap: '2px' }}>
             {navItems.map(({ to, label, exact }) => {
@@ -104,7 +112,7 @@ export default function ClienteLayout() {
         <Outlet />
       </main>
 
-      <footer style={{ background: 'var(--header-bg)', padding: '14px 24px', textAlign: 'center' }}>
+      <footer style={{ background: esCorporativo ? fondoCorporativo : '#003366', padding: '14px 24px', textAlign: 'center' }}>
         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>© 2026 Akar Automotores. Todos los derechos reservados.</span>
       </footer>
     </div>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { CORP as canal } from './config'
+import './corporativo.css'
 
-export default function AdminVehiculos() {
+export default function AdminCorpVehiculos() {
   const [vehiculos, setVehiculos] = useState([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
@@ -11,7 +13,7 @@ export default function AdminVehiculos() {
   const [toast, setToast] = useState(null)
 
   async function load() {
-    const { data } = await supabase.from('vehiculos').select('*').order('marca').order('modelo').order('version')
+    const { data } = await supabase.from(canal.tablaVehiculos).select('*').order('marca').order('modelo').order('version')
     setVehiculos(data || [])
     setLoading(false)
   }
@@ -24,7 +26,7 @@ export default function AdminVehiculos() {
   }
 
   async function toggleActivo(v) {
-    await supabase.from('vehiculos').update({ activo: !v.activo }).eq('id', v.id)
+    await supabase.from(canal.tablaVehiculos).update({ activo: !v.activo }).eq('id', v.id)
     setVehiculos(prev => prev.map(x => x.id === v.id ? { ...x, activo: !x.activo } : x))
     showToast(`Vehículo ${!v.activo ? 'activado' : 'desactivado'}`)
   }
@@ -32,7 +34,7 @@ export default function AdminVehiculos() {
   async function handleDelete(v) {
     if (!confirm(`¿Eliminar ${v.marca} ${v.modelo} ${v.version}? Esta acción no se puede deshacer.`)) return
     setDeletingId(v.id)
-    const { error } = await supabase.from('vehiculos').delete().eq('id', v.id)
+    const { error } = await supabase.from(canal.tablaVehiculos).delete().eq('id', v.id)
     if (!error) {
       setVehiculos(prev => prev.filter(x => x.id !== v.id))
       showToast('Vehículo eliminado')
@@ -49,7 +51,7 @@ export default function AdminVehiculos() {
       // 1. Copiar el vehículo
       const { id, created_at, updated_at, ...vehiculoData } = v
       const { data: nuevo, error: errV } = await supabase
-        .from('vehiculos')
+        .from(canal.tablaVehiculos)
         .insert({ ...vehiculoData, version: v.version + ' (copia)', activo: false })
         .select()
         .single()
@@ -57,7 +59,7 @@ export default function AdminVehiculos() {
 
       // 2. Copiar todos los planes
       const { data: planes } = await supabase
-        .from('planes_financiacion')
+        .from(canal.tablaPlanes)
         .select('*')
         .eq('vehiculo_id', v.id)
 
@@ -66,7 +68,7 @@ export default function AdminVehiculos() {
           ...planData,
           vehiculo_id: nuevo.id,
         }))
-        await supabase.from('planes_financiacion').insert(nuevosPlanes)
+        await supabase.from(canal.tablaPlanes).insert(nuevosPlanes)
       }
 
       showToast(`Vehículo duplicado como "${v.version} (copia)"`)
@@ -85,17 +87,17 @@ export default function AdminVehiculos() {
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div className="tema-corporativo" style={{ padding: '32px' }}>
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: '#003366', marginBottom: '4px' }}>Vehículos</h1>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: '700', color: 'var(--navy)', marginBottom: '4px' }}>{canal.nombreAdmin}</h1>
           <p style={{ color: '#8896a7', fontSize: '14px' }}>{vehiculos.length} vehículos cargados</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <input className="form-input" style={{ width: '220px' }} placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
-          <Link to="/admin/vehiculos/nuevo" className="btn btn-primary">
+          <Link to={`${canal.adminPath}/nuevo`} className="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nuevo vehículo
           </Link>
@@ -108,7 +110,7 @@ export default function AdminVehiculos() {
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
               <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
             </svg>
-            <p>No hay vehículos. <Link to="/admin/vehiculos/nuevo" style={{ color: '#003366' }}>Agregar el primero</Link></p>
+            <p>No hay vehículos. <Link to={`${canal.adminPath}/nuevo`} style={{ color: 'var(--navy)' }}>Agregar el primero</Link></p>
           </div>
         ) : (
           <div className="table-wrap">
@@ -139,7 +141,7 @@ export default function AdminVehiculos() {
                       )}
                     </td>
                     <td>
-                      <div style={{ fontWeight: '700', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', color: '#003366' }}>{v.marca}</div>
+                      <div style={{ fontWeight: '700', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', color: 'var(--navy)' }}>{v.marca}</div>
                       <div style={{ fontSize: '13px', color: '#4a5568' }}>{v.modelo}</div>
                     </td>
                     <td style={{ fontSize: '13px' }}>{v.version}</td>
@@ -156,7 +158,7 @@ export default function AdminVehiculos() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        <Link to={`/admin/vehiculos/editar/${v.id}`} className="btn btn-ghost btn-sm btn-icon" title="Editar">
+                        <Link to={`${canal.adminPath}/editar/${v.id}`} className="btn btn-ghost btn-sm btn-icon" title="Editar">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

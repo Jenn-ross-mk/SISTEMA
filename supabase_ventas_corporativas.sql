@@ -30,3 +30,7 @@ CREATE POLICY "corp_vehiculos_select" ON corp_vehiculos FOR SELECT USING (auth.u
 CREATE POLICY "corp_vehiculos_admin_write" ON corp_vehiculos FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND rol = 'admin'));
 CREATE POLICY "corp_planes_select" ON corp_planes_financiacion FOR SELECT USING (auth.uid() IS NOT NULL);
 CREATE POLICY "corp_planes_admin_write" ON corp_planes_financiacion FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND rol = 'admin'));
+
+-- 4. IVA opcional por cuota (solo en ventas corporativas). Se guarda como
+--    fracción, igual que el quebranto: 0.21 = 21%. En 0 no se aplica.
+ALTER TABLE corp_planes_financiacion ADD COLUMN iva_pct NUMERIC(6,4) DEFAULT 0;

@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const NAV = [
@@ -52,7 +52,6 @@ const NAV = [
 export default function AdminLayout() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const esSupervisor = profile?.rol === 'supervisor'
   const navItems = NAV.filter(item => !(item.adminOnly && esSupervisor))
 
@@ -128,7 +127,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className={location.pathname.startsWith('/admin/corporativo') ? 'tema-corporativo' : undefined} style={{ flex: 1, overflow: 'auto', background: '#f8f9fb' }}>
+      <main style={{ flex: 1, overflow: 'auto', background: '#f8f9fb' }}>
         <Outlet />
       </main>
     </div>
