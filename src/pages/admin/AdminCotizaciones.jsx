@@ -110,7 +110,7 @@ export default function AdminCotizaciones() {
   if (loading) return <div className="loading-center"><div className="spinner" /></div>
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '32px', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
 
       <div style={{ marginBottom: '24px' }}>
@@ -173,9 +173,10 @@ export default function AdminCotizaciones() {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? 'minmax(0, 1fr) 360px' : 'minmax(0, 1fr)', gap: '20px', alignItems: 'start' }}>
+      {/* La lista y el detalle ocupan el alto restante de la ventana: la lista se desplaza por dentro y el detalle queda siempre a la vista */}
+      <div style={{ flex: 1, minHeight: '420px', display: 'grid', gridTemplateColumns: selected ? 'minmax(0, 1fr) 360px' : 'minmax(0, 1fr)', gridTemplateRows: 'minmax(0, 1fr)', gap: '20px', alignItems: 'start' }}>
         {/* Table */}
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)' }}>
+        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)', maxHeight: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {filtered.length === 0 ? (
             <div className="empty-state">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -185,9 +186,9 @@ export default function AdminCotizaciones() {
             </div>
           ) : (
             <>
-              <div className="table-wrap">
+              <div className="table-wrap" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
                 <table>
-                  <thead>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                     <tr>
                       <th>Fecha</th>
                       {puedeVerTodo && <th>Vendedor</th>}
@@ -258,7 +259,7 @@ export default function AdminCotizaciones() {
           const esPlanAhorro = selected.plan_nombre?.toLowerCase().includes('plan de ahorro')
           const resumen = resumenCotizacion(selected, vendedorInfo?.localidad)
           return (
-            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)', position: 'sticky', top: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)', maxHeight: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e6ec', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: '700', color: '#003366' }}>Detalle</h3>
@@ -271,7 +272,7 @@ export default function AdminCotizaciones() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-              <div style={{ padding: '16px 20px', maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
+              <div style={{ padding: '16px 20px', flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
                 {resumen.secciones.map((sec, i) => (
                   <div key={sec.titulo} style={{ borderTop: i > 0 ? '1px solid #e2e6ec' : 'none', paddingTop: i > 0 ? '12px' : 0, marginBottom: '12px' }}>
                     <div style={{ fontSize: '11px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>{sec.titulo}</div>
