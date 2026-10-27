@@ -6,7 +6,7 @@ const UTIL = ANCHO - MARGEN * 2
 const NAVY = [0, 51, 102]
 const PT_A_MM = 0.3528
 
-async function cargarLogo() {
+export async function cargarLogo() {
   try {
     const res = await fetch('/logo-akar.png')
     if (!res.ok) return null
