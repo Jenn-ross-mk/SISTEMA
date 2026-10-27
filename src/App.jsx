@@ -13,6 +13,7 @@ import AdminVehiculos from './pages/admin/AdminVehiculos'
 import AdminVehiculoForm from './pages/admin/AdminVehiculoForm'
 import AdminVendedores from './pages/admin/AdminVendedores'
 import AdminCotizaciones from './pages/admin/AdminCotizaciones'
+import AdminInformes from './pages/admin/AdminInformes'
 import AdminFormularios from './pages/admin/AdminFormularios'
 import AdminPlanAhorro from './pages/admin/AdminPlanAhorro'
 import AdminPlanAhorroForm from './pages/admin/AdminPlanAhorroForm'
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="vehiculos/editar/:id" element={<PrivateRoute allowedRoles={['admin']}><AdminVehiculoForm /></PrivateRoute>} />
         <Route path="vendedores" element={<AdminVendedores />} />
         <Route path="cotizaciones" element={<AdminCotizaciones />} />
+        <Route path="informes" element={<AdminInformes />} />
         <Route path="formularios" element={<AdminFormularios />} />
         <Route path="plan-ahorro" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorro /></PrivateRoute>} />
         <Route path="plan-ahorro/nuevo" element={<PrivateRoute allowedRoles={['admin']}><AdminPlanAhorroForm /></PrivateRoute>} />

@@ -5,6 +5,14 @@ const PROVINCIAS = { chubut: 'Chubut', santacruz: 'Santa Cruz' }
 const peso = n => `$${fmt(n)}`
 const vacio = v => v === null || v === undefined || v === ''
 
+// Fecha y hora en formato 24 h (en Chrome, es-AR muestra 12 h sin "a. m./p. m.").
+export function fechaHora(fecha) {
+  return new Date(fecha).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  })
+}
+
 export function esPlanAhorro(c) {
   return !!c?.plan_nombre?.toLowerCase().includes('plan de ahorro')
 }
@@ -33,7 +41,7 @@ export function resumenCotizacion(c, localidad) {
   secciones.push({
     titulo: 'Datos generales',
     filas: [
-      ['Fecha', new Date(c.created_at).toLocaleString('es-AR')],
+      ['Fecha', fechaHora(c.created_at)],
       ['Vendedor', c.vendedor_nombre],
       ['Localidad', localidad || d.localidad || '-'],
       ['Cliente', c.cliente_nombre],

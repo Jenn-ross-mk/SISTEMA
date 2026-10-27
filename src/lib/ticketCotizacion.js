@@ -1,4 +1,4 @@
-import { resumenCotizacion } from './resumenCotizacion'
+import { fechaHora, resumenCotizacion } from './resumenCotizacion'
 
 const ANCHO = 80 // mm, ancho de un ticket de impresora térmica
 const MARGEN = 5
@@ -114,7 +114,7 @@ function dibujar(doc, r, c, logo, pintar) {
 
   y += 1
   texto(`Presupuesto válido por ${r.validez}`, { size: 7, align: 'center' })
-  texto(`Emitido: ${new Date().toLocaleString('es-AR')}`, { size: 7, align: 'center' })
+  texto(`Emitido: ${fechaHora(new Date())}`, { size: 7, align: 'center' })
 
   return y + MARGEN
 }
