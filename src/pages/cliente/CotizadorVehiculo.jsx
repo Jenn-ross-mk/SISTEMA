@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { insertarCotizacion } from '../../lib/resumenCotizacion'
 
 const BANCOS = { chubut: 0.012, santacruz: 0.014 }
 const IVA_QUEBRANTO = 0.21
@@ -155,7 +156,7 @@ export default function CotizadorVehiculo() {
     if (saving) return
     setSaving(true)
     try {
-      const { error } = await supabase.from('cotizaciones').insert({
+      const { error } = await insertarCotizacion(supabase, {
         vendedor_id: profile.id,
         vendedor_nombre: vendedor || profile.nombre,
         cliente_nombre: cliente,
@@ -175,6 +176,29 @@ export default function CotizadorVehiculo() {
         quebranto,
         sellado,
         saldo_efectivo: saldoEfectivo,
+        detalle: {
+          telefono,
+          vehiculo: {
+            marca: vehiculo.marca,
+            modelo: vehiculo.modelo,
+            version: vehiculo.version,
+            imagen_url: vehiculo.imagen_url || null,
+          },
+          banco,
+          banco_nombre: banco === 'chubut' ? 'Banco Chubut (1.2%)' : 'Banco Santa Cruz (1.4%)',
+          plan: cuotaActivaRow
+            ? {
+                nombre: cuotaActivaRow.nombre_plan,
+                cuotas: cuotaActivaRow.cuotas,
+                tna: cuotaActivaRow.tna,
+                quebranto_pct: quebrantoPct,
+                total_cuotas: totalCuotas,
+              }
+            : null,
+          gastos_bancarios: gastosBancarios,
+          observaciones,
+          validez: '5 días',
+        },
       })
       if (error) throw error
     } catch (err) {

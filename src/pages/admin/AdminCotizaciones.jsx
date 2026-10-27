@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { resumenCotizacion } from '../../lib/resumenCotizacion'
+import { descargarTicket } from '../../lib/ticketCotizacion'
 
 const LOCALIDADES = ['Comodoro Rivadavia', 'Trelew', 'Puerto Madryn', 'Esquel']
 
@@ -23,6 +25,7 @@ export default function AdminCotizaciones() {
   const [vendedores, setVendedores] = useState([])
   const [selected, setSelected] = useState(null)
   const [toast, setToast] = useState(null)
+  const [descargando, setDescargando] = useState(false)
 
   async function load() {
     let query = supabase
@@ -83,6 +86,18 @@ export default function AdminCotizaciones() {
   })
 
   const totalSaldo = filtered.reduce((s, c) => s + (c.saldo_efectivo || 0), 0)
+
+  async function handleTicket(c, localidad) {
+    setDescargando(true)
+    try {
+      await descargarTicket(c, localidad)
+    } catch (err) {
+      console.error('Error al generar el ticket:', err)
+      showToast('No se pudo generar el ticket', 'error')
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   function handleLocalidadChange(val) {
     setFiltroLocalidad(val)
@@ -158,7 +173,7 @@ export default function AdminCotizaciones() {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 360px' : '1fr', gap: '20px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? 'minmax(0, 1fr) 360px' : 'minmax(0, 1fr)', gap: '20px', alignItems: 'start' }}>
         {/* Table */}
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)' }}>
           {filtered.length === 0 ? (
@@ -241,6 +256,7 @@ export default function AdminCotizaciones() {
         {selected && (() => {
           const vendedorInfo = vendedores.find(v => v.id === selected.vendedor_id)
           const esPlanAhorro = selected.plan_nombre?.toLowerCase().includes('plan de ahorro')
+          const resumen = resumenCotizacion(selected, vendedorInfo?.localidad)
           return (
             <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e6ec', boxShadow: '0 2px 8px rgba(0,51,102,0.06)', position: 'sticky', top: '20px' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e6ec', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -255,67 +271,44 @@ export default function AdminCotizaciones() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-              <div style={{ padding: '16px 20px' }}>
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>{new Date(selected.created_at).toLocaleString('es-AR')}</div>
-                </div>
-                {[
-                  ['Vendedor', selected.vendedor_nombre],
-                  ['Localidad', vendedorInfo?.localidad || '—'],
-                  ['Cliente', selected.cliente_nombre],
-                  ['Vehículo', selected.vehiculo_descripcion],
-                ].map(([k, v]) => (
-                  <div key={k} style={{ marginBottom: '10px' }}>
-                    <div style={{ fontSize: '11px', color: '#8896a7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '500' }}>{v}</div>
+              <div style={{ padding: '16px 20px', maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
+                {resumen.secciones.map((sec, i) => (
+                  <div key={sec.titulo} style={{ borderTop: i > 0 ? '1px solid #e2e6ec' : 'none', paddingTop: i > 0 ? '12px' : 0, marginBottom: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>{sec.titulo}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {sec.filas.map(([k, v], j) => (
+                        <div key={j} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', fontSize: '13px' }}>
+                          <span style={{ color: '#4a5568' }}>{k}</span>
+                          <span style={{ fontWeight: '600', textAlign: 'right', overflowWrap: 'anywhere' }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
 
-                <div style={{ borderTop: '1px solid #e2e6ec', marginTop: '14px', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {esPlanAhorro ? (
-                    <>
-                      {[
-                        ['Valor móvil', selected.precio_base],
-                        ['Cuota 1 con promo', selected.valor_cuota],
-                      ].map(([k, v]) => (
-                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                          <span style={{ color: '#4a5568' }}>{k}</span>
-                          <span style={{ fontWeight: '600' }}>${fmt(v)}</span>
-                        </div>
-                      ))}
-                      {selected.plan_nombre && (
-                        <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '4px' }}>
-                          Plan: {selected.plan_nombre}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {[
-                        ['Precio base', selected.precio_base],
-                        ['Gastos bancarios', (selected.quebranto || 0) + (selected.sellado || 0)],
-                        ['Entrega (usado)', selected.entrega_usado],
-                        ['Monto financiado', selected.monto_financiado],
-                        ['Descuento', selected.descuento],
-                      ].map(([k, v]) => (
-                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                          <span style={{ color: '#4a5568' }}>{k}</span>
-                          <span style={{ fontWeight: '600' }}>${fmt(v)}</span>
-                        </div>
-                      ))}
-                      {selected.plan_nombre && (
-                        <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '4px' }}>
-                          Plan: {selected.plan_nombre} · Cuota: ${fmt(selected.valor_cuota)}
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div style={{ borderTop: '2px solid #003366', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: '#003366', fontSize: '16px' }}>
-                    <span>{esPlanAhorro ? 'CUOTA 1' : 'SALDO'}</span>
-                    <span>${fmt(selected.saldo_efectivo)}</span>
-                  </div>
+                <div style={{ borderTop: '2px solid #003366', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: '#003366', fontSize: '16px' }}>
+                  <span>{resumen.total.label}</span>
+                  <span>{resumen.total.valor}</span>
                 </div>
+
+                {resumen.observaciones.map(([titulo, texto]) => (
+                  <div key={titulo} style={{ marginTop: '14px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#003366', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>{titulo}</div>
+                    <div style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{texto}</div>
+                  </div>
+                ))}
+
+                <div style={{ fontSize: '12px', color: '#8896a7', marginTop: '14px' }}>
+                  Presupuesto válido por {resumen.validez}
+                </div>
+              </div>
+              <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e6ec' }}>
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={descargando} onClick={() => handleTicket(selected, vendedorInfo?.localidad)}>
+                  {descargando
+                    ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white' }} /> Generando...</>
+                    : <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar ticket</>
+                  }
+                </button>
               </div>
             </div>
           )

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { insertarCotizacion } from '../../lib/resumenCotizacion'
 
 export default function CotizadorPlanAhorro() {
     const { id } = useParams()
@@ -51,7 +52,7 @@ export default function CotizadorPlanAhorro() {
         if (saving) return
         setSaving(true)
         try {
-            const { error } = await supabase.from('cotizaciones').insert({
+            const { error } = await insertarCotizacion(supabase, {
                 vendedor_id: profile.id,
                 vendedor_nombre: profile.nombre,
                 cliente_nombre: cliente,
@@ -68,6 +69,30 @@ export default function CotizadorPlanAhorro() {
                 sellado: 0,
                 entrega_usado: 0,
                 descuento: plan?.bonificacion_pct || 0,
+                detalle: {
+                    localidad: profile.localidad || null,
+                    vehiculo: {
+                        marca: vehiculo.marca,
+                        modelo: vehiculo.modelo,
+                        version: vehiculo.version,
+                        imagen_url: vehiculo.imagen_url || null,
+                    },
+                    tipo_plan: vehiculo.tipo_plan || null,
+                    plazo_cuotas: vehiculo.plazo_cuotas || null,
+                    valor_movil: vehiculo.valor_movil || 0,
+                    cuota1_sin_promo: plan?.cuota1_sin_promo ?? null,
+                    bonificacion_pct: plan?.bonificacion_pct ?? null,
+                    cuota1_con_promo: plan?.cuota1_con_promo ?? null,
+                    sistema: plan?.sistema || null,
+                    adjudicacion: plan?.adjudicacion || null,
+                    cuota_pura: plan?.cuota_pura ?? null,
+                    integracion_minima: plan?.integracion_minima || null,
+                    tramos: tramos.map(t => ({ label: t.label, monto: t.monto, es_promo: !!t.es_promo })),
+                    promociones: promos.filter(p => p.activa).map(p => ({ titulo: p.titulo, descripcion: p.descripcion || '' })),
+                    observaciones,
+                    observaciones_plan: plan?.observaciones || null,
+                    validez: '10 días',
+                },
             })
             if (error) throw error
         } catch (err) {
