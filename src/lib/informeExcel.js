@@ -1,6 +1,11 @@
 import { esPlanAhorro, fechaHora } from './resumenCotizacion'
+import { cargarLogo } from './ticketCotizacion'
 
 const NAVY = 'FF003366'
+const BLANCO = 'FFFFFFFF'
+const CELESTE = 'FFE6F1FB'
+const ZEBRA = 'FFF5F7FA'
+const BORDE = 'FFD5DCE5'
 const MONEDA = '"$"#,##0.00'
 const PROVINCIAS = { chubut: 'Chubut', santacruz: 'Santa Cruz' }
 
@@ -11,13 +16,77 @@ function fechaLocal(iso) {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
 }
 
-function estilizarEncabezado(fila) {
-  fila.eachCell(cell => {
-    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } }
-    cell.alignment = { vertical: 'middle', wrapText: true }
+const relleno = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } })
+const centrado = { horizontal: 'center', vertical: 'middle', wrapText: true }
+const bordeFino = { style: 'thin', color: { argb: BORDE } }
+const bordes = { top: bordeFino, bottom: bordeFino, left: bordeFino, right: bordeFino }
+
+// Columna A y la última quedan vacías y angostas, como márgenes a los lados.
+// Las columnas con datos van de la B (2) a la `ultima`.
+function prepararHoja(ws, anchos) {
+  ws.columns = [{ width: 3 }, ...anchos.map(width => ({ width })), { width: 3 }]
+  ws.pageSetup = {
+    orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+    horizontalCentered: true, margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 },
+  }
+  return anchos.length + 1
+}
+
+// Banner azul con el logo y el título, igual al encabezado del cotizador.
+// El título se centra sobre las primeras `span` columnas para que se vea
+// al abrir la planilla aunque la tabla sea muy ancha.
+function banner(ws, ultima, span, logoId, subtitulo) {
+  const finTitulo = Math.min(1 + span, ultima)
+  ws.getRow(1).height = 10
+  ws.getRow(2).height = 58
+  ws.getRow(3).height = 22
+  ws.getRow(4).height = 12
+  for (let col = 2; col <= ultima; col++) {
+    ws.getCell(2, col).fill = relleno(NAVY)
+    ws.getCell(3, col).fill = relleno(CELESTE)
+  }
+  ws.mergeCells(2, 2, 2, finTitulo)
+  const titulo = ws.getCell(2, 2)
+  titulo.value = 'REGISTRO DE COTIZACIONES'
+  titulo.font = { bold: true, size: 20, color: { argb: BLANCO } }
+  titulo.alignment = { horizontal: 'center', vertical: 'middle' }
+
+  ws.mergeCells(3, 2, 3, finTitulo)
+  const sub = ws.getCell(3, 2)
+  sub.value = subtitulo
+  sub.font = { size: 10, color: { argb: NAVY } }
+  sub.alignment = { horizontal: 'center', vertical: 'middle' }
+
+  if (logoId !== null) {
+    ws.addImage(logoId, { tl: { col: 1.08, row: 1.15 }, ext: { width: 146, height: 54 } })
+  }
+}
+
+function encabezadoTabla(ws, fila, desde, valores) {
+  const row = ws.getRow(fila)
+  row.height = 34
+  valores.forEach((v, i) => {
+    const cell = row.getCell(desde + i)
+    cell.value = v
+    cell.font = { bold: true, color: { argb: BLANCO } }
+    cell.fill = relleno(NAVY)
+    cell.alignment = centrado
+    cell.border = bordes
   })
-  fila.height = 30
+}
+
+function celdasTabla(ws, fila, desde, hasta, zebra) {
+  for (let col = desde; col <= hasta; col++) {
+    const cell = ws.getCell(fila, col)
+    cell.alignment = centrado
+    cell.border = bordes
+    if (zebra) cell.fill = relleno(ZEBRA)
+  }
+}
+
+async function logoParaExcel(wb) {
+  const logo = await cargarLogo()
+  return logo ? wb.addImage({ base64: logo, extension: 'png' }) : null
 }
 
 function filaCotizacion(c, sucursal, modeloCatalogo) {
@@ -59,25 +128,41 @@ export async function descargarInformeExcel(cotizaciones, vendedores, filtros, v
   const wb = new ExcelJS.Workbook()
   wb.creator = 'AKAR'
   wb.created = new Date()
+  const logoId = await logoParaExcel(wb)
 
   const localidadDe = id => vendedores.find(v => v.id === id)?.localidad || ''
   const modeloDe = id => vehiculos.find(v => v.id === id)?.modelo || ''
+  const generado = fechaHora(new Date())
+  const subtitulo = [...filtros.map(([k, v]) => `${k}: ${v}`), `Generado: ${generado}`].join('   ·   ')
 
   // --- Hoja Resumen por vendedor ---
   const res = wb.addWorksheet('Resumen', { views: [{ showGridLines: false }] })
-  res.columns = [
-    { width: 28 }, { width: 22 }, { width: 14 }, { width: 16 }, { width: 16 }, { width: 22 }, { width: 22 },
-  ]
-  res.addRow(['Informe de cotizaciones - AKAR']).font = { bold: true, size: 16, color: { argb: NAVY } }
-  for (const [k, v] of filtros) {
-    const r = res.addRow([k, v])
-    r.getCell(1).font = { bold: true }
-  }
-  res.addRow(['Generado', fechaHora(new Date())]).getCell(1).font = { bold: true }
-  res.addRow([])
+  const ultRes = prepararHoja(res, [28, 22, 15, 17, 17, 24, 26])
+  banner(res, ultRes, 7, logoId, 'Resumen por vendedor')
 
-  const encabezadoRes = res.addRow(['Vendedor', 'Sucursal', 'Cotizaciones', 'Convencionales', 'Plan de Ahorro', 'Monto financiado total', 'Saldo total (convencional)'])
-  estilizarEncabezado(encabezadoRes)
+  // Filtros aplicados, en una tabla chica de dos filas
+  const bloques = [[2, 2], [3, 3], [4, 4], [5, 6], [7, 8]]
+  const datosFiltros = [...filtros.slice(0, 4), ['Generado', generado]]
+  datosFiltros.forEach(([k, v], i) => {
+    const [ini, fin] = bloques[i]
+    if (fin > ini) { res.mergeCells(5, ini, 5, fin); res.mergeCells(6, ini, 6, fin) }
+    const label = res.getCell(5, ini)
+    label.value = k.toUpperCase()
+    label.font = { bold: true, size: 9, color: { argb: NAVY } }
+    const valor = res.getCell(6, ini)
+    valor.value = v
+    valor.font = { bold: true }
+    for (let col = ini; col <= fin; col++) {
+      res.getCell(5, col).fill = relleno(CELESTE)
+      for (const f of [5, 6]) {
+        res.getCell(f, col).alignment = centrado
+        res.getCell(f, col).border = bordes
+      }
+    }
+  })
+  res.getRow(5).height = 20
+  res.getRow(6).height = 24
+  res.getRow(7).height = 14
 
   const porVendedor = new Map()
   for (const c of cotizaciones) {
@@ -96,49 +181,79 @@ export async function descargarInformeExcel(cotizaciones, vendedores, filtros, v
     }
   }
   const resumen = [...porVendedor.values()].sort((a, b) => b.total - a.total)
-  for (const v of resumen) {
-    res.addRow([v.nombre, v.localidad, v.total, v.conv, v.pa, v.monto, v.saldo])
-  }
+
+  encabezadoTabla(res, 8, 2, ['Vendedor', 'Sucursal', 'Cotizaciones', 'Convencionales', 'Plan de Ahorro', 'Monto financiado total', 'Saldo total (convencional)'])
+  let fila = 9
+  resumen.forEach((v, i) => {
+    res.getRow(fila).values = [null, v.nombre, v.localidad, v.total, v.conv, v.pa, v.monto, v.saldo]
+    celdasTabla(res, fila, 2, ultRes, i % 2 === 1)
+    res.getRow(fila).height = 22
+    fila++
+  })
   const tot = resumen.reduce((t, v) => ({
     total: t.total + v.total, conv: t.conv + v.conv, pa: t.pa + v.pa, monto: t.monto + v.monto, saldo: t.saldo + v.saldo,
   }), { total: 0, conv: 0, pa: 0, monto: 0, saldo: 0 })
-  const filaTotal = res.addRow(['TOTAL', '', tot.total, tot.conv, tot.pa, tot.monto, tot.saldo])
-  filaTotal.font = { bold: true }
-  filaTotal.eachCell(cell => { cell.border = { top: { style: 'medium', color: { argb: NAVY } } } })
-  res.getColumn(6).numFmt = MONEDA
-  res.getColumn(7).numFmt = MONEDA
+  res.getRow(fila).values = [null, 'TOTAL', '', tot.total, tot.conv, tot.pa, tot.monto, tot.saldo]
+  celdasTabla(res, fila, 2, ultRes, false)
+  res.getRow(fila).height = 26
+  for (let col = 2; col <= ultRes; col++) {
+    const cell = res.getCell(fila, col)
+    cell.font = { bold: true, color: { argb: NAVY } }
+    cell.fill = relleno(CELESTE)
+    cell.border = { ...bordes, top: { style: 'medium', color: { argb: NAVY } } }
+  }
+  for (let f = 9; f <= fila; f++) {
+    res.getCell(f, 7).numFmt = MONEDA
+    res.getCell(f, 8).numFmt = MONEDA
+  }
 
   // --- Hoja con todas las cotizaciones y todos sus campos ---
-  const hoja = wb.addWorksheet('Cotizaciones', { views: [{ state: 'frozen', ySplit: 1 }] })
-  hoja.columns = [
-    { header: 'Fecha', key: 'fecha', width: 17, style: { numFmt: 'dd/mm/yyyy hh:mm' } },
-    { header: 'Vendedor', key: 'vendedor', width: 22 },
-    { header: 'Sucursal', key: 'sucursal', width: 20 },
-    { header: 'Cliente', key: 'cliente', width: 24 },
-    { header: 'Teléfono', key: 'telefono', width: 14 },
-    { header: 'Tipo', key: 'tipo', width: 15 },
-    { header: 'Vehículo', key: 'vehiculo', width: 30 },
-    { header: 'Modelo', key: 'modelo', width: 14 },
-    { header: 'Provincia', key: 'provincia', width: 12 },
-    { header: 'Precio base / Valor móvil', key: 'precio', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Plan', key: 'plan', width: 34 },
-    { header: 'Cuotas', key: 'cuotas', width: 9 },
-    { header: 'Tasa', key: 'tasa', width: 11 },
-    { header: 'Monto financiado', key: 'monto', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Valor cuota / Cuota 1', key: 'cuota', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Banco', key: 'banco', width: 22 },
-    { header: 'Quebranto', key: 'quebranto', width: 16, style: { numFmt: MONEDA } },
-    { header: 'Sellado', key: 'sellado', width: 16, style: { numFmt: MONEDA } },
-    { header: 'Gastos bancarios', key: 'gastos', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Entrega usado', key: 'entrega', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Descuento', key: 'descuento', width: 16, style: { numFmt: MONEDA } },
-    { header: 'Bonificación %', key: 'bonificacion', width: 13 },
-    { header: 'Saldo / Cuota 1', key: 'saldo', width: 18, style: { numFmt: MONEDA } },
-    { header: 'Observaciones', key: 'observaciones', width: 50 },
+  const columnas = [
+    ['Fecha', 'fecha', 17, 'dd/mm/yyyy hh:mm'],
+    ['Vendedor', 'vendedor', 22],
+    ['Sucursal', 'sucursal', 20],
+    ['Cliente', 'cliente', 24],
+    ['Teléfono', 'telefono', 14],
+    ['Tipo', 'tipo', 16],
+    ['Vehículo', 'vehiculo', 30],
+    ['Modelo', 'modelo', 14],
+    ['Provincia', 'provincia', 12],
+    ['Precio base / Valor móvil', 'precio', 18, MONEDA],
+    ['Plan', 'plan', 34],
+    ['Cuotas', 'cuotas', 9],
+    ['Tasa', 'tasa', 11],
+    ['Monto financiado', 'monto', 18, MONEDA],
+    ['Valor cuota / Cuota 1', 'cuota', 18, MONEDA],
+    ['Banco', 'banco', 22],
+    ['Quebranto', 'quebranto', 16, MONEDA],
+    ['Sellado', 'sellado', 16, MONEDA],
+    ['Gastos bancarios', 'gastos', 18, MONEDA],
+    ['Entrega usado', 'entrega', 18, MONEDA],
+    ['Descuento', 'descuento', 16, MONEDA],
+    ['Bonificación %', 'bonificacion', 13],
+    ['Saldo / Cuota 1', 'saldo', 18, MONEDA],
+    ['Observaciones', 'observaciones', 50],
   ]
-  estilizarEncabezado(hoja.getRow(1))
-  for (const c of cotizaciones) hoja.addRow(filaCotizacion(c, localidadDe(c.vendedor_id), modeloDe(c.vehiculo_id)))
-  hoja.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: hoja.columns.length } }
+  const hoja = wb.addWorksheet('Cotizaciones', { views: [{ state: 'frozen', ySplit: 5, showGridLines: false }] })
+  const ultHoja = prepararHoja(hoja, columnas.map(c => c[2]))
+  banner(hoja, ultHoja, 8, logoId, subtitulo)
+
+  encabezadoTabla(hoja, 5, 2, columnas.map(c => c[0]))
+  cotizaciones.forEach((c, i) => {
+    const datos = filaCotizacion(c, localidadDe(c.vendedor_id), modeloDe(c.vehiculo_id))
+    const f = 6 + i
+    const row = hoja.getRow(f)
+    columnas.forEach(([, key, , numFmt], j) => {
+      const cell = row.getCell(2 + j)
+      cell.value = datos[key] ?? null
+      if (numFmt) cell.numFmt = numFmt
+    })
+    celdasTabla(hoja, f, 2, ultHoja, i % 2 === 1)
+    // Alto según el texto más largo, para que las observaciones no queden cortadas
+    const lineas = Math.max(1, ...columnas.map(([, key, ancho]) => Math.ceil((datos[key] instanceof Date ? 1 : String(datos[key] ?? '').length) / (ancho - 2))))
+    row.height = Math.max(22, lineas * 15 + 6)
+  })
+  hoja.autoFilter = { from: { row: 5, column: 2 }, to: { row: 5, column: ultHoja } }
 
   const buffer = await wb.xlsx.writeBuffer()
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
